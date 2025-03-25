@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
@@ -23,37 +22,30 @@ interface SchedulerContextType {
   timeSlots: TimeSlot[];
   schedules: Schedule[];
   
-  // Methods for instructors
   addInstructor: (instructor: Omit<Instructor, 'id'>) => void;
   updateInstructor: (instructor: Instructor) => void;
   deleteInstructor: (id: string) => void;
   
-  // Methods for courses
   addCourse: (course: Omit<Course, 'id'>) => void;
   updateCourse: (course: Course) => void;
   deleteCourse: (id: string) => void;
   
-  // Methods for rooms
   addRoom: (room: Omit<Room, 'id'>) => void;
   updateRoom: (room: Room) => void;
   deleteRoom: (id: string) => void;
   
-  // Methods for departments
   addDepartment: (department: Omit<Department, 'id'>) => void;
   updateDepartment: (department: Department) => void;
   deleteDepartment: (id: string) => void;
   
-  // Methods for sections
   addSection: (section: Omit<Section, 'id'>) => void;
   updateSection: (section: Section) => void;
   deleteSection: (id: string) => void;
   
-  // Methods for scheduling
   generateSchedule: () => void;
   getScheduleForSection: (sectionId: string) => ScheduleCell[][];
   clearSchedules: () => void;
   
-  // Helper methods
   getInstructorById: (id: string) => Instructor | undefined;
   getCourseById: (id: string) => Course | undefined;
   getRoomById: (id: string) => Room | undefined;
@@ -64,7 +56,6 @@ interface SchedulerContextType {
 
 const SchedulerContext = createContext<SchedulerContextType | undefined>(undefined);
 
-// Create initial time slots based on the predefined arrays
 const createInitialTimeSlots = (): TimeSlot[] => {
   const slots: TimeSlot[] = [];
   
@@ -82,8 +73,199 @@ const createInitialTimeSlots = (): TimeSlot[] => {
   return slots;
 };
 
+const generateExampleInstructors = (): Instructor[] => {
+  const designations = ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer'];
+  const maxHoursByDesignation = {
+    'Professor': 10,
+    'Associate Professor': 12,
+    'Assistant Professor': 14,
+    'Lecturer': 16
+  };
+  
+  const instructorNames = [
+    'Dr. Emma Watson', 'Dr. Michael Brown', 'Dr. Sarah Johnson', 'Dr. David Clark',
+    'Dr. Jennifer Lee', 'Dr. Robert Chen', 'Dr. Lisa Garcia', 'Dr. James Wilson',
+    'Dr. Patricia Moore', 'Dr. Thomas Rodriguez', 'Dr. Elizabeth Lewis', 'Dr. Daniel Walker',
+    'Dr. Margaret Hall', 'Dr. Richard Allen', 'Dr. Susan Young', 'Dr. Kevin Wright',
+    'Dr. Karen Scott', 'Dr. Charles King', 'Dr. Nancy Hill', 'Dr. Joseph Green'
+  ];
+  
+  return instructorNames.map((name, index) => {
+    const designation = designations[index % designations.length];
+    return {
+      id: `instructor-example-${index + 1}`,
+      name,
+      designation,
+      maxHours: maxHoursByDesignation[designation as keyof typeof maxHoursByDesignation],
+      currentHours: 0
+    };
+  });
+};
+
+const generateExampleRooms = (): Room[] => {
+  const buildings = ['A', 'B', 'C', 'D'];
+  const rooms: Room[] = [];
+  
+  buildings.forEach(building => {
+    for (let i = 1; i <= 5; i++) {
+      rooms.push({
+        id: `room-example-${building}${i}`,
+        number: `${building}${i < 10 ? '0' : ''}${i}`,
+        capacity: 30 + (Math.floor(Math.random() * 10) * 5)
+      });
+    }
+  });
+  
+  return rooms;
+};
+
+const generateExampleDepartments = (): Department[] => {
+  return [
+    { id: 'department-example-1', name: 'Computer Science', courses: [] },
+    { id: 'department-example-2', name: 'Mathematics', courses: [] },
+    { id: 'department-example-3', name: 'Physics', courses: [] },
+    { id: 'department-example-4', name: 'Chemistry', courses: [] },
+    { id: 'department-example-5', name: 'Biology', courses: [] },
+    { id: 'department-example-6', name: 'Engineering', courses: [] },
+    { id: 'department-example-7', name: 'Business', courses: [] },
+    { id: 'department-example-8', name: 'Medicine', courses: [] },
+    { id: 'department-example-9', name: 'Law', courses: [] },
+    { id: 'department-example-10', name: 'Arts and Humanities', courses: [] }
+  ];
+};
+
+const generateExampleCourses = (instructors: Instructor[]): Course[] => {
+  const csSubjects = [
+    'Introduction to Programming', 'Data Structures', 'Algorithms', 'Database Systems',
+    'Computer Networks', 'Operating Systems', 'Software Engineering', 'Web Development',
+    'Mobile Development', 'Machine Learning'
+  ];
+  
+  const mathSubjects = [
+    'Calculus I', 'Calculus II', 'Linear Algebra', 'Differential Equations',
+    'Discrete Mathematics', 'Statistics', 'Probability', 'Number Theory',
+    'Abstract Algebra', 'Real Analysis'
+  ];
+  
+  const physicsSubjects = [
+    'Mechanics', 'Thermodynamics', 'Electromagnetism', 'Optics',
+    'Quantum Physics', 'Modern Physics', 'Classical Physics', 'Astrophysics',
+    'Fluid Mechanics', 'Relativity'
+  ];
+  
+  const chemistrySubjects = [
+    'General Chemistry', 'Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry',
+    'Biochemistry', 'Analytical Chemistry', 'Environmental Chemistry', 'Medicinal Chemistry',
+    'Polymer Chemistry', 'Nuclear Chemistry'
+  ];
+  
+  const biologySubjects = [
+    'Cell Biology', 'Molecular Biology', 'Genetics', 'Microbiology',
+    'Immunology', 'Ecology', 'Evolution', 'Anatomy and Physiology',
+    'Zoology', 'Botany'
+  ];
+  
+  const engineeringSubjects = [
+    'Mechanics of Materials', 'Fluid Mechanics', 'Thermodynamics', 'Electric Circuits',
+    'Digital Systems', 'Control Systems', 'Signal Processing', 'Communications',
+    'VLSI Design', 'Robotics'
+  ];
+  
+  const businessSubjects = [
+    'Principles of Management', 'Marketing', 'Finance', 'Accounting',
+    'Economics', 'Business Law', 'Entrepreneurship', 'International Business',
+    'Human Resources', 'Operations Management'
+  ];
+  
+  const allSubjects = [
+    ...csSubjects, ...mathSubjects, ...physicsSubjects, ...chemistrySubjects,
+    ...biologySubjects, ...engineeringSubjects, ...businessSubjects
+  ];
+  
+  return allSubjects.map((name, index) => {
+    const instructorId = instructors[index % instructors.length].id;
+    return {
+      id: `course-example-${index + 1}`,
+      name,
+      instructorId,
+      maxStudents: 30 + (Math.floor(Math.random() * 10) * 5)
+    };
+  });
+};
+
+const assignCoursesToDepartments = (
+  departments: Department[], 
+  courses: Course[]
+): Department[] => {
+  const updatedDepartments = [...departments];
+  
+  // Assign CS courses to CS department
+  const csDept = updatedDepartments.find(d => d.name === 'Computer Science');
+  if (csDept) {
+    csDept.courses = courses.slice(0, 10).map(c => c.id);
+  }
+  
+  // Assign Math courses to Math department
+  const mathDept = updatedDepartments.find(d => d.name === 'Mathematics');
+  if (mathDept) {
+    mathDept.courses = courses.slice(10, 20).map(c => c.id);
+  }
+  
+  // Assign Physics courses to Physics department
+  const physicsDept = updatedDepartments.find(d => d.name === 'Physics');
+  if (physicsDept) {
+    physicsDept.courses = courses.slice(20, 30).map(c => c.id);
+  }
+  
+  // Assign Chemistry courses to Chemistry department
+  const chemistryDept = updatedDepartments.find(d => d.name === 'Chemistry');
+  if (chemistryDept) {
+    chemistryDept.courses = courses.slice(30, 40).map(c => c.id);
+  }
+  
+  // Assign Biology courses to Biology department
+  const biologyDept = updatedDepartments.find(d => d.name === 'Biology');
+  if (biologyDept) {
+    biologyDept.courses = courses.slice(40, 50).map(c => c.id);
+  }
+  
+  // Assign Engineering courses to Engineering department
+  const engineeringDept = updatedDepartments.find(d => d.name === 'Engineering');
+  if (engineeringDept) {
+    engineeringDept.courses = courses.slice(50, 60).map(c => c.id);
+  }
+  
+  // Assign Business courses to Business department
+  const businessDept = updatedDepartments.find(d => d.name === 'Business');
+  if (businessDept) {
+    businessDept.courses = courses.slice(60, 70).map(c => c.id);
+  }
+  
+  return updatedDepartments;
+};
+
+const generateExampleSections = (departments: Department[]): Section[] => {
+  const semesters = ['Fall 2023', 'Spring 2024', 'Summer 2024', 'Fall 2024'];
+  const years = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  
+  const sections: Section[] = [];
+  
+  departments.slice(0, 7).forEach(department => {
+    years.forEach(year => {
+      semesters.slice(0, 2).forEach(semester => {
+        sections.push({
+          id: `section-example-${department.id}-${year}-${semester}`,
+          name: `${department.name} ${year} ${semester}`,
+          departmentId: department.id
+        });
+      });
+    });
+  });
+  
+  return sections;
+};
+
 export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for all entities
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -91,8 +273,8 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [sections, setSections] = useState<Section[]>([]);
   const [timeSlots] = useState<TimeSlot[]>(createInitialTimeSlots());
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [examplesAdded, setExamplesAdded] = useState(false);
   
-  // Load data from localStorage on mount
   useEffect(() => {
     const loadData = () => {
       const storedInstructors = localStorage.getItem('instructors');
@@ -101,6 +283,7 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const storedDepartments = localStorage.getItem('departments');
       const storedSections = localStorage.getItem('sections');
       const storedSchedules = localStorage.getItem('schedules');
+      const storedExamplesAdded = localStorage.getItem('examplesAdded');
       
       if (storedInstructors) setInstructors(JSON.parse(storedInstructors));
       if (storedCourses) setCourses(JSON.parse(storedCourses));
@@ -108,12 +291,36 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (storedDepartments) setDepartments(JSON.parse(storedDepartments));
       if (storedSections) setSections(JSON.parse(storedSections));
       if (storedSchedules) setSchedules(JSON.parse(storedSchedules));
+      if (storedExamplesAdded) setExamplesAdded(JSON.parse(storedExamplesAdded));
     };
     
     loadData();
-  }, []);
+    
+    const populateExampleData = async () => {
+      if (instructors.length === 0 && courses.length === 0 && !examplesAdded) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const exampleInstructors = generateExampleInstructors();
+        const exampleRooms = generateExampleRooms();
+        const exampleDepartments = generateExampleDepartments();
+        const exampleCourses = generateExampleCourses(exampleInstructors);
+        const updatedDepartments = assignCoursesToDepartments(exampleDepartments, exampleCourses);
+        const exampleSections = generateExampleSections(updatedDepartments);
+        
+        setInstructors(exampleInstructors);
+        setRooms(exampleRooms);
+        setCourses(exampleCourses);
+        setDepartments(updatedDepartments);
+        setSections(exampleSections);
+        setExamplesAdded(true);
+        
+        toast.success('Example data has been loaded');
+      }
+    };
+    
+    populateExampleData();
+  }, [instructors.length, courses.length, examplesAdded]);
   
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('instructors', JSON.stringify(instructors));
   }, [instructors]);
@@ -138,7 +345,10 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem('schedules', JSON.stringify(schedules));
   }, [schedules]);
   
-  // Helper methods to get entities by ID
+  useEffect(() => {
+    localStorage.setItem('examplesAdded', JSON.stringify(examplesAdded));
+  }, [examplesAdded]);
+  
   const getInstructorById = (id: string) => instructors.find(i => i.id === id);
   const getCourseById = (id: string) => courses.find(c => c.id === id);
   const getRoomById = (id: string) => rooms.find(r => r.id === id);
@@ -146,7 +356,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const getSectionById = (id: string) => sections.find(s => s.id === id);
   const getTimeSlotById = (id: string) => timeSlots.find(t => t.id === id);
   
-  // Methods for instructors
   const addInstructor = (instructorData: Omit<Instructor, 'id'>) => {
     const newInstructor: Instructor = {
       ...instructorData,
@@ -168,7 +377,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   const deleteInstructor = (id: string) => {
-    // Check if instructor is used in any course
     const isUsed = courses.some(course => course.instructorId === id);
     if (isUsed) {
       toast.error("Can't delete instructor as they are assigned to courses");
@@ -179,7 +387,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Instructor deleted successfully");
   };
   
-  // Methods for courses
   const addCourse = (courseData: Omit<Course, 'id'>) => {
     const newCourse: Course = {
       ...courseData,
@@ -200,7 +407,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   const deleteCourse = (id: string) => {
-    // Check if course is used in any department
     const isUsed = departments.some(dept => dept.courses.includes(id));
     if (isUsed) {
       toast.error("Can't delete course as it's assigned to departments");
@@ -211,7 +417,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Course deleted successfully");
   };
   
-  // Methods for rooms
   const addRoom = (roomData: Omit<Room, 'id'>) => {
     const newRoom: Room = {
       ...roomData,
@@ -236,7 +441,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Room deleted successfully");
   };
   
-  // Methods for departments
   const addDepartment = (departmentData: Omit<Department, 'id'>) => {
     const newDepartment: Department = {
       ...departmentData,
@@ -257,7 +461,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
   
   const deleteDepartment = (id: string) => {
-    // Check if department is used in any section
     const isUsed = sections.some(section => section.departmentId === id);
     if (isUsed) {
       toast.error("Can't delete department as it has sections assigned");
@@ -268,7 +471,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Department deleted successfully");
   };
   
-  // Methods for sections
   const addSection = (sectionData: Omit<Section, 'id'>) => {
     const newSection: Section = {
       ...sectionData,
@@ -291,13 +493,11 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deleteSection = (id: string) => {
     setSections(prev => prev.filter(section => section.id !== id));
     
-    // Also remove any schedules for this section
     setSchedules(prev => prev.filter(schedule => schedule.sectionId !== id));
     
     toast.success("Section deleted successfully");
   };
   
-  // Generate a schedule based on constraints
   const generateSchedule = () => {
     if (sections.length === 0) {
       toast.error("Please add at least one section");
@@ -319,10 +519,8 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
     
-    // Clear existing schedules
     setSchedules([]);
     
-    // Reset instructor hours
     const resetInstructors = instructors.map(instructor => ({
       ...instructor,
       currentHours: 0
@@ -331,13 +529,10 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     const newSchedules: Schedule[] = [];
     
-    // For each section, create a schedule
     sections.forEach(section => {
-      // Get the department for this section
       const department = departments.find(d => d.id === section.departmentId);
       if (!department) return;
       
-      // Get all courses for this department
       const departmentCourses = courses.filter(c => 
         department.courses.includes(c.id)
       );
@@ -347,55 +542,41 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
       
-      // Track instructor assignments to prevent conflicts
       const instructorAssignments: Record<string, Set<string>> = {};
-      
-      // Track room assignments to prevent conflicts
       const roomAssignments: Record<string, Set<string>> = {};
       
-      // For each course, find a suitable time slot and room
       departmentCourses.forEach(course => {
-        // Get the instructor for this course
         const instructor = instructors.find(i => i.id === course.instructorId);
         if (!instructor) return;
         
-        // Check if instructor has reached their max hours
         const currentHours = instructor.currentHours || 0;
         if (currentHours >= instructor.maxHours) {
           toast.error(`Instructor ${instructor.name} has reached their maximum hours`);
           return;
         }
         
-        // Initialize assignment tracking if needed
         if (!instructorAssignments[instructor.id]) {
           instructorAssignments[instructor.id] = new Set();
         }
         
-        // Try to find a suitable time slot
         for (const timeSlot of timeSlots) {
-          // Skip if instructor is already assigned to this time slot
           if (instructorAssignments[instructor.id].has(timeSlot.id)) {
             continue;
           }
           
-          // Try to find a suitable room for this time slot
           for (const room of rooms) {
-            // Initialize room assignments if needed
             if (!roomAssignments[room.id]) {
               roomAssignments[room.id] = new Set();
             }
             
-            // Check if room is already assigned for this time slot
             if (roomAssignments[room.id].has(timeSlot.id)) {
               continue;
             }
             
-            // Check if room capacity is sufficient
             if (room.capacity < course.maxStudents) {
               continue;
             }
             
-            // We found a suitable time slot and room!
             const newSchedule: Schedule = {
               id: `schedule-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
               courseId: course.id,
@@ -407,13 +588,9 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             
             newSchedules.push(newSchedule);
             
-            // Mark instructor as assigned for this time slot
             instructorAssignments[instructor.id].add(timeSlot.id);
-            
-            // Mark room as assigned for this time slot
             roomAssignments[room.id].add(timeSlot.id);
             
-            // Update instructor hours
             const updatedInstructor = {
               ...instructor,
               currentHours: (instructor.currentHours || 0) + 1
@@ -423,11 +600,9 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               prev.map(i => i.id === instructor.id ? updatedInstructor : i)
             );
             
-            // Break the room loop as we've found a suitable time slot and room
             break;
           }
           
-          // Check if we've already scheduled this course
           if (newSchedules.some(s => s.courseId === course.id && s.sectionId === section.id)) {
             break;
           }
@@ -444,17 +619,13 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Schedule generated successfully");
   };
   
-  // Get a 2D array representation of the schedule for a section
   const getScheduleForSection = (sectionId: string): ScheduleCell[][] => {
-    // Filter schedules for the given section
     const sectionSchedules = schedules.filter(s => s.sectionId === sectionId);
     
-    // Create a 2D array for the schedule (days x time slots)
     const scheduleGrid: ScheduleCell[][] = DAYS.map(() => 
       TIME_SLOTS.map(() => ({ isEmpty: true }))
     );
     
-    // Fill in the schedule grid
     sectionSchedules.forEach(schedule => {
       const timeSlot = getTimeSlotById(schedule.timeSlotId);
       if (!timeSlot) return;
@@ -484,11 +655,9 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return scheduleGrid;
   };
   
-  // Clear all schedules
   const clearSchedules = () => {
     setSchedules([]);
     
-    // Reset instructor hours
     const resetInstructors = instructors.map(instructor => ({
       ...instructor,
       currentHours: 0

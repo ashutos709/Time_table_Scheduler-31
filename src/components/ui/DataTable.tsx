@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 
 interface Column<T> {
   header: string;
-  accessorKey: keyof T | ((row: T) => React.ReactNode);
+  accessorKey?: keyof T | ((row: T) => React.ReactNode);
   cell?: (row: T) => React.ReactNode;
 }
 
@@ -34,11 +34,15 @@ function DataTable<T>({
       return column.cell(row);
     }
     
-    if (typeof column.accessorKey === 'function') {
-      return column.accessorKey(row);
+    if (column.accessorKey) {
+      if (typeof column.accessorKey === 'function') {
+        return column.accessorKey(row);
+      }
+      
+      return row[column.accessorKey as keyof T] as React.ReactNode;
     }
     
-    return row[column.accessorKey as keyof T] as React.ReactNode;
+    return null;
   };
   
   return (

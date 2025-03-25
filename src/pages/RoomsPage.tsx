@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
@@ -98,11 +97,11 @@ const RoomsPage: React.FC = () => {
   const columns = [
     {
       header: 'Room Number',
-      accessorKey: 'number',
+      accessorKey: 'number' as keyof Room,
     },
     {
       header: 'Capacity',
-      accessorKey: 'capacity',
+      accessorKey: 'capacity' as keyof Room,
     },
     {
       header: 'Actions',
