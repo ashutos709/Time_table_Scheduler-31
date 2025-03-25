@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessorKey?: keyof T | ((row: T) => React.ReactNode);
   cell?: (row: T) => React.ReactNode;

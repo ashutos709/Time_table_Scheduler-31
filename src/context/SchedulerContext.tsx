@@ -182,11 +182,28 @@ const generateExampleCourses = (instructors: Instructor[]): Course[] => {
     ...biologySubjects, ...engineeringSubjects, ...businessSubjects
   ];
   
+  const generateCourseCode = (name: string, index: number): string => {
+    let deptCode = '';
+    
+    if (index < 10) deptCode = 'CS';
+    else if (index < 20) deptCode = 'MATH';
+    else if (index < 30) deptCode = 'PHYS';
+    else if (index < 40) deptCode = 'CHEM';
+    else if (index < 50) deptCode = 'BIO';
+    else if (index < 60) deptCode = 'ENG';
+    else deptCode = 'BUS';
+    
+    const courseNum = (index % 10) * 100 + Math.floor(Math.random() * 99);
+    
+    return `${deptCode}${courseNum}`;
+  };
+  
   return allSubjects.map((name, index) => {
     const instructorId = instructors[index % instructors.length].id;
     return {
       id: `course-example-${index + 1}`,
       name,
+      code: generateCourseCode(name, index),
       instructorId,
       maxStudents: 30 + (Math.floor(Math.random() * 10) * 5)
     };

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
-import DataTable from '@/components/ui/DataTable';
+import DataTable, { Column } from '@/components/ui/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,18 +32,18 @@ const TimeSlotsPage: React.FC = () => {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
-  const columns = [
+  const columns: Column<TimeSlot>[] = [
     {
       header: 'Day',
-      accessorKey: 'day',
+      accessorKey: 'day' as keyof TimeSlot,
     },
     {
       header: 'Start Time',
-      accessorKey: 'startTime',
+      accessorKey: 'startTime' as keyof TimeSlot,
     },
     {
       header: 'End Time',
-      accessorKey: 'endTime',
+      accessorKey: 'endTime' as keyof TimeSlot,
     },
   ];
   
