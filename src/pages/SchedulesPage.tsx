@@ -1,61 +1,17 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/button';
-import { 
-  Calendar, 
-  Trash2, 
-  RefreshCw, 
-  Check, 
-  X, 
-  AlertTriangle, 
-  FileDown,
-  ChevronDown
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { DAYS, TIME_SLOTS } from '@/types';
 import { toast } from 'sonner';
 import AddManualScheduleForm from '@/components/schedules/AddManualScheduleForm';
+import ScheduleGrid from '@/components/schedules/ScheduleGrid';
+import ScheduleActions from '@/components/schedules/ScheduleActions';
+import SectionSelector from '@/components/schedules/SectionSelector';
+import SchedulingConstraints from '@/components/schedules/SchedulingConstraints';
+import ClearScheduleDialog from '@/components/schedules/ClearScheduleDialog';
+import ScheduleToolbar from '@/components/schedules/ScheduleToolbar';
 
 const SchedulesPage: React.FC = () => {
   const { 
@@ -67,6 +23,7 @@ const SchedulesPage: React.FC = () => {
   } = useScheduler();
   
   const [selectedSection, setSelectedSection] = useState<string>('');
+  const clearDialogTriggerRef = useRef<HTMLButtonElement>(null);
   
   const handleGenerateSchedule = () => {
     generateSchedule();
@@ -120,102 +77,13 @@ const SchedulesPage: React.FC = () => {
     toast.success("Schedule exported to CSV");
   };
   
-  const renderScheduleGrid = () => {
-    if (!selectedSection) {
-      return (
-        <div className="flex flex-col items-center justify-center h-72 space-y-4 glass-effect rounded-lg p-8">
-          <AlertTriangle className="h-12 w-12 text-muted-foreground/50" />
-          <h3 className="text-lg font-medium">No Section Selected</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            Please select a section from the dropdown above to view its schedule.
-          </p>
-        </div>
-      );
+  const openClearDialog = () => {
+    if (clearDialogTriggerRef.current) {
+      clearDialogTriggerRef.current.click();
     }
-    
-    const section = sections.find(s => s.id === selectedSection);
-    if (!section) return null;
-    
-    const scheduleGrid = getScheduleForSection(selectedSection);
-    const hasSchedule = scheduleGrid.some(row => row.some(cell => !cell.isEmpty));
-    
-    if (!hasSchedule) {
-      return (
-        <div className="flex flex-col items-center justify-center h-72 space-y-4 glass-effect rounded-lg p-8">
-          <Calendar className="h-12 w-12 text-muted-foreground/50" />
-          <h3 className="text-lg font-medium">No Schedule Available</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            There is no schedule generated for this section yet. Click the "Generate Schedule" button to create one.
-          </p>
-          <Button onClick={handleGenerateSchedule}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Generate Schedule
-          </Button>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="rounded-md border glass-effect animate-fade-in overflow-hidden">
-        <Table>
-          <TableHeader className="bg-secondary/50">
-            <TableRow>
-              <TableHead className="font-medium text-foreground w-24">Time</TableHead>
-              {DAYS.map((day) => (
-                <TableHead key={day} className="font-medium text-foreground">
-                  {day}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {TIME_SLOTS.map((timeSlot, timeIndex) => (
-              <TableRow key={timeIndex}>
-                <TableCell className="font-medium bg-secondary/30">
-                  {timeSlot.start} - {timeSlot.end}
-                </TableCell>
-                {DAYS.map((_, dayIndex) => {
-                  const cell = scheduleGrid[dayIndex][timeIndex];
-                  return (
-                    <TableCell
-                      key={dayIndex}
-                      className={`table-cell-shine ${!cell.isEmpty ? 'bg-secondary/20' : ''}`}
-                    >
-                      {!cell.isEmpty && cell.course && cell.instructor && cell.room ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="space-y-1">
-                                <div className="font-medium">{cell.course.name}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {cell.instructor.name}
-                                </div>
-                                <Badge variant="outline" className="text-xs">
-                                  Room {cell.room.number}
-                                </Badge>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              <div className="space-y-1 text-left">
-                                <div className="font-bold">{cell.course.code}: {cell.course.name}</div>
-                                <div>Instructor: {cell.instructor.name} ({cell.instructor.designation})</div>
-                                <div>Room: {cell.room.number} (Capacity: {cell.room.capacity})</div>
-                                <div>Max Students: {cell.course.maxStudents}</div>
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : null}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
   };
+  
+  const scheduleGrid = selectedSection ? getScheduleForSection(selectedSection) : [];
   
   return (
     <div className="space-y-8">
@@ -226,108 +94,32 @@ const SchedulesPage: React.FC = () => {
         <div className="flex space-x-2">
           <AddManualScheduleForm />
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Actions
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Schedule Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleGenerateSchedule}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Generate Schedule
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleExportSchedule}
-                disabled={!selectedSection}
-              >
-                <FileDown className="mr-2 h-4 w-4" />
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => document.getElementById('clear-schedule-dialog')?.click()}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear All Schedules
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ScheduleActions
+            selectedSection={selectedSection}
+            onGenerateSchedule={handleGenerateSchedule}
+            onExportSchedule={handleExportSchedule}
+            onOpenClearDialog={openClearDialog}
+          />
         </div>
         
-        <AlertDialog>
-          <AlertDialogTrigger id="clear-schedule-dialog" className="hidden" />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Clear All Schedules</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will delete all generated schedules. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={handleClearSchedules}
-              >
-                Delete All Schedules
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ClearScheduleDialog
+          triggerRef={clearDialogTriggerRef}
+          onConfirmClear={handleClearSchedules}
+        />
       </PageHeader>
       
       <div className="flex justify-between items-center space-x-4">
-        <div className="flex-1 max-w-xs">
-          <Select
-            value={selectedSection}
-            onValueChange={setSelectedSection}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a section" />
-            </SelectTrigger>
-            <SelectContent>
-              {sections.length === 0 ? (
-                <div className="py-2 px-2 text-sm text-muted-foreground">
-                  No sections available
-                </div>
-              ) : (
-                sections.map(section => (
-                  <SelectItem key={section.id} value={section.id}>
-                    {section.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        <SectionSelector
+          sections={sections}
+          selectedSection={selectedSection}
+          onSectionChange={setSelectedSection}
+        />
         
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGenerateSchedule}
-            className="hidden sm:flex"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Generate Schedule
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportSchedule}
-            disabled={!selectedSection}
-            className="hidden sm:flex"
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-        </div>
+        <ScheduleToolbar
+          selectedSection={selectedSection}
+          onGenerateSchedule={handleGenerateSchedule}
+          onExportSchedule={handleExportSchedule}
+        />
       </div>
       
       <div className="relative">
@@ -340,45 +132,18 @@ const SchedulesPage: React.FC = () => {
           </div>
         )}
         
-        {renderScheduleGrid()}
+        <ScheduleGrid
+          selectedSection={selectedSection}
+          scheduleGrid={scheduleGrid}
+          onGenerateSchedule={handleGenerateSchedule}
+        />
       </div>
       
-      <div className="hidden md:block bg-secondary/30 glass-effect rounded-lg p-6 space-y-4">
-        <h3 className="text-xl font-medium">Scheduling Constraints</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-teal-500" />
-              <h4 className="font-medium">Weekly Hours</h4>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Total of 24 hours of lecture time per week.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-teal-500" />
-              <h4 className="font-medium">Instructor Conflicts</h4>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              No instructor teaches two classes at the same time.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4 text-teal-500" />
-              <h4 className="font-medium">Workload by Designation</h4>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Teaching hours distributed based on instructor designation.
-            </p>
-          </div>
-        </div>
-      </div>
+      <SchedulingConstraints />
     </div>
   );
 };
+
+import { DAYS, TIME_SLOTS } from '@/types';
 
 export default SchedulesPage;
