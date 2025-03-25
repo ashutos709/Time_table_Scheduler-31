@@ -6,7 +6,7 @@ import DataTable from '@/components/ui/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Plus, Edit, X } from 'lucide-react';
+import { Trash2, Plus, Edit, X, Users as UsersIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -126,19 +126,19 @@ const InstructorsPage: React.FC = () => {
   const columns = [
     {
       header: 'Name',
-      accessorKey: 'name',
+      accessorKey: 'name' as keyof Instructor,
     },
     {
       header: 'Designation',
-      accessorKey: 'designation',
+      accessorKey: 'designation' as keyof Instructor,
     },
     {
       header: 'Max Hours',
-      accessorKey: 'maxHours',
+      accessorKey: 'maxHours' as keyof Instructor,
     },
     {
       header: 'Current Hours',
-      accessorKey: (row: Instructor) => row.currentHours || 0,
+      cell: (row: Instructor) => row.currentHours || 0,
     },
     {
       header: 'Actions',
@@ -283,7 +283,7 @@ const InstructorsPage: React.FC = () => {
         columns={columns}
         emptyState={
           <div className="flex flex-col items-center justify-center space-y-3 py-6">
-            <Users className="h-12 w-12 text-muted-foreground/50" />
+            <UsersIcon className="h-12 w-12 text-muted-foreground/50" />
             <p className="text-lg font-medium">No instructors found</p>
             <p className="text-sm text-muted-foreground">
               Add instructors to start creating schedules.
