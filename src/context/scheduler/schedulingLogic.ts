@@ -8,12 +8,13 @@ import {
   TimeSlot, 
   ScheduleCell,
   DAYS, 
-  TIME_SLOTS 
+  TIME_SLOTS,
+  Department
 } from './types';
 
 export const generateScheduleForAllSections = (
   sections: Section[],
-  departments: Section[],
+  departments: Department[],
   instructors: Instructor[],
   courses: Course[],
   rooms: Room[],

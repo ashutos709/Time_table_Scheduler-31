@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
@@ -61,6 +60,7 @@ export interface SchedulerContextType {
   generateSchedule: () => void;
   getScheduleForSection: (sectionId: string) => ScheduleCell[][];
   clearSchedules: () => void;
+  addManualSchedule: (scheduleData: Omit<Schedule, 'id'>) => void;
   
   getInstructorById: (id: string) => Instructor | undefined;
   getCourseById: (id: string) => Course | undefined;
@@ -126,7 +126,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     populateExampleData();
   }, [instructors.length, courses.length, examplesAdded]);
   
-  // Effect hooks for data persistence
   useEffect(() => {
     saveToLocalStorage('instructors', instructors);
   }, [instructors]);
@@ -155,7 +154,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     saveToLocalStorage('examplesAdded', examplesAdded);
   }, [examplesAdded]);
   
-  // Getter methods
   const getInstructorById = (id: string) => instructors.find(i => i.id === id);
   const getCourseById = (id: string) => courses.find(c => c.id === id);
   const getRoomById = (id: string) => rooms.find(r => r.id === id);
@@ -163,7 +161,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const getSectionById = (id: string) => sections.find(s => s.id === id);
   const getTimeSlotById = (id: string) => timeSlots.find(t => t.id === id);
   
-  // Entity management methods
   const addInstructor = (instructorData: Omit<Instructor, 'id'>) => {
     const newInstructor: Instructor = {
       ...instructorData,
@@ -304,6 +301,58 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success("Section deleted successfully");
   };
   
+  const addManualSchedule = (scheduleData: Omit<Schedule, 'id'>) => {
+    const newSchedule: Schedule = {
+      ...scheduleData,
+      id: `schedule-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    };
+    
+    const course = getCourseById(scheduleData.courseId);
+    const instructor = getInstructorById(scheduleData.instructorId);
+    const room = getRoomById(scheduleData.roomId);
+    const timeSlot = getTimeSlotById(scheduleData.timeSlotId);
+    const section = getSectionById(scheduleData.sectionId);
+    
+    if (!course || !instructor || !room || !timeSlot || !section) {
+      toast.error("Please select valid course, instructor, room, time slot, and section");
+      return;
+    }
+    
+    const existingSchedules = schedules.filter(s => 
+      s.timeSlotId === scheduleData.timeSlotId
+    );
+    
+    const hasInstructorConflict = existingSchedules.some(s => 
+      s.instructorId === scheduleData.instructorId
+    );
+    
+    if (hasInstructorConflict) {
+      toast.error(`The instructor ${instructor.name} is already scheduled at this time`);
+      return;
+    }
+    
+    const hasRoomConflict = existingSchedules.some(s => 
+      s.roomId === scheduleData.roomId
+    );
+    
+    if (hasRoomConflict) {
+      toast.error(`Room ${room.number} is already in use at this time`);
+      return;
+    }
+    
+    const updatedInstructor = {
+      ...instructor,
+      currentHours: (instructor.currentHours || 0) + 1
+    };
+    
+    setInstructors(prev => 
+      prev.map(i => i.id === instructor.id ? updatedInstructor : i)
+    );
+    
+    setSchedules(prev => [...prev, newSchedule]);
+    toast.success(`Schedule added for ${course.name} with ${instructor.name} in Room ${room.number}`);
+  };
+  
   const generateSchedule = () => {
     if (sections.length === 0) {
       toast.error("Please add at least one section");
@@ -335,7 +384,7 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     const newSchedules = generateScheduleForAllSections(
       sections,
-      departments as any,
+      departments,
       resetInstructors,
       courses,
       rooms,
@@ -347,7 +396,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
     
-    // Update instructor hours
     const updatedInstructors = [...resetInstructors];
     newSchedules.forEach(schedule => {
       const instructorIndex = updatedInstructors.findIndex(i => i.id === schedule.instructorId);
@@ -418,6 +466,7 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     generateSchedule,
     getScheduleForSection,
     clearSchedules,
+    addManualSchedule,
     
     getInstructorById,
     getCourseById,

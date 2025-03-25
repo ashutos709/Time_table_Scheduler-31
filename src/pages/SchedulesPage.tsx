@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
@@ -56,6 +55,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { DAYS, TIME_SLOTS } from '@/types';
 import { toast } from 'sonner';
+import AddManualScheduleForm from '@/components/schedules/AddManualScheduleForm';
 
 const SchedulesPage: React.FC = () => {
   const { 
@@ -86,7 +86,6 @@ const SchedulesPage: React.FC = () => {
     const section = sections.find(s => s.id === selectedSection);
     if (!section) return;
     
-    // Create CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += `Schedule for ${section.name}\r\n\r\n`;
     csvContent += `Time,${DAYS.join(",")}\r\n`;
@@ -110,7 +109,6 @@ const SchedulesPage: React.FC = () => {
       csvContent += row + "\r\n";
     });
     
-    // Create download link
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -122,7 +120,6 @@ const SchedulesPage: React.FC = () => {
     toast.success("Schedule exported to CSV");
   };
   
-  // Render the schedule grid for the selected section
   const renderScheduleGrid = () => {
     if (!selectedSection) {
       return (
@@ -226,37 +223,41 @@ const SchedulesPage: React.FC = () => {
         title="Schedules"
         description="Generate and view class schedules."
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Actions
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Schedule Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleGenerateSchedule}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Generate Schedule
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleExportSchedule}
-              disabled={!selectedSection}
-            >
-              <FileDown className="mr-2 h-4 w-4" />
-              Export as CSV
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => document.getElementById('clear-schedule-dialog')?.click()}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear All Schedules
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex space-x-2">
+          <AddManualScheduleForm />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Actions
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Schedule Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleGenerateSchedule}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Generate Schedule
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleExportSchedule}
+                disabled={!selectedSection}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => document.getElementById('clear-schedule-dialog')?.click()}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear All Schedules
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         
         <AlertDialog>
           <AlertDialogTrigger id="clear-schedule-dialog" className="hidden" />
