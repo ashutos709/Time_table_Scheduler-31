@@ -31,6 +31,19 @@ const TimeSlotsPage: React.FC = () => {
   } = useScheduler();
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
+  const [customTimeSlot, setCustomTimeSlot] = useState({
+    day: DAYS[0],
+    startTime: '',
+    endTime: ''
+  });
+  
+  const handleCustomInputChange = (field: string, value: string) => {
+    setCustomTimeSlot(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   
   const columns: Column<TimeSlot>[] = [
     {
@@ -53,61 +66,144 @@ const TimeSlotsPage: React.FC = () => {
         title="Time Slots"
         description="View available time slots for scheduling."
       >
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button disabled>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Time Slot
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Time Slots</DialogTitle>
-              <DialogDescription>
-                Time slots are pre-defined in the system. 
-                They follow the standard academic scheduling periods.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label className="font-medium">Available Days</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {DAYS.map((day) => (
-                    <div key={day} className="bg-secondary p-2 rounded text-center">
-                      {day}
-                    </div>
-                  ))}
+        <div className="flex space-x-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button disabled>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Time Slot
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Time Slots</DialogTitle>
+                <DialogDescription>
+                  Time slots are pre-defined in the system. 
+                  They follow the standard academic scheduling periods.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label className="font-medium">Available Days</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {DAYS.map((day) => (
+                      <div key={day} className="bg-secondary p-2 rounded text-center">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-medium">Available Time Slots</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {TIME_SLOTS.map((slot, index) => (
+                      <div key={index} className="bg-secondary p-2 rounded text-center">
+                        {slot.start} - {slot.end}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <DialogFooter className="mt-6">
+                  <Button type="button" onClick={() => setIsAddDialogOpen(false)}>
+                    Close
+                  </Button>
+                </DialogFooter>
               </div>
               
-              <div className="space-y-2">
-                <Label className="font-medium">Available Time Slots</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  {TIME_SLOTS.map((slot, index) => (
-                    <div key={index} className="bg-secondary p-2 rounded text-center">
-                      {slot.start} - {slot.end}
-                    </div>
-                  ))}
+              <button
+                onClick={() => setIsAddDialogOpen(false)}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Clock className="mr-2 h-4 w-4" />
+                Custom Time Slot
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Custom Time Slot</DialogTitle>
+                <DialogDescription>
+                  Create a custom time slot for your scheduling needs.
+                  Note: This is a demo feature - custom time slots are not currently supported.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="day">Day</Label>
+                  <Select 
+                    value={customTimeSlot.day}
+                    onValueChange={(value) => handleCustomInputChange('day', value)}
+                  >
+                    <SelectTrigger id="day">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS.map(day => (
+                        <SelectItem key={day} value={day}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={customTimeSlot.startTime}
+                    onChange={(e) => handleCustomInputChange('startTime', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={customTimeSlot.endTime}
+                    onChange={(e) => handleCustomInputChange('endTime', e.target.value)}
+                  />
+                </div>
+                
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="outline" onClick={() => setIsCustomDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      alert('This is a demo feature. Custom time slots are not currently supported.');
+                      setIsCustomDialogOpen(false);
+                    }}
+                  >
+                    Add Custom Slot
+                  </Button>
+                </DialogFooter>
               </div>
               
-              <DialogFooter className="mt-6">
-                <Button type="button" onClick={() => setIsAddDialogOpen(false)}>
-                  Close
-                </Button>
-              </DialogFooter>
-            </div>
-            
-            <button
-              onClick={() => setIsAddDialogOpen(false)}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
-          </DialogContent>
-        </Dialog>
+              <button
+                onClick={() => setIsCustomDialogOpen(false)}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

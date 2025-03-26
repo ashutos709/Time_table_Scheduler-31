@@ -47,6 +47,7 @@ const SectionsPage: React.FC = () => {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -101,6 +102,13 @@ const SectionsPage: React.FC = () => {
     }
     
     handleCloseDialog();
+  };
+  
+  const handleDeleteAllSections = () => {
+    sections.forEach(section => {
+      deleteSection(section.id);
+    });
+    setIsDeleteAllDialogOpen(false);
   };
   
   const columns: Column<Section>[] = [
@@ -170,74 +178,102 @@ const SectionsPage: React.FC = () => {
         title="Sections"
         description="Manage class sections within departments."
       >
-        <Dialog open={isAddDialogOpen || !!editingSection} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Section
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingSection ? 'Edit' : 'Add'} Section</DialogTitle>
-              <DialogDescription>
-                {editingSection
-                  ? "Update section details and department."
-                  : "Add a new section to the system."}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Section Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., CS-1A"
-                  required
-                />
-              </div>
+        <div className="flex space-x-2">
+          <Dialog open={isAddDialogOpen || !!editingSection} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Section
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{editingSection ? 'Edit' : 'Add'} Section</DialogTitle>
+                <DialogDescription>
+                  {editingSection
+                    ? "Update section details and department."
+                    : "Add a new section to the system."}
+                </DialogDescription>
+              </DialogHeader>
               
-              <div className="space-y-2">
-                <Label htmlFor="departmentId">Department</Label>
-                <Select
-                  value={formData.departmentId}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, departmentId: value }))}
+              <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Section Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., CS-1A"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="departmentId">Department</Label>
+                  <Select
+                    value={formData.departmentId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, departmentId: value }))}
+                  >
+                    <SelectTrigger id="departmentId">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map(department => (
+                        <SelectItem key={department.id} value={department.id}>
+                          {department.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingSection ? 'Update' : 'Add'} Section
+                  </Button>
+                </DialogFooter>
+              </form>
+              
+              <button
+                onClick={handleCloseDialog}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogContent>
+          </Dialog>
+
+          <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={sections.length === 0}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete All Sections
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete All Sections</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all {sections.length} sections. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleDeleteAllSections}
                 >
-                  <SelectTrigger id="departmentId">
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map(department => (
-                      <SelectItem key={department.id} value={department.id}>
-                        {department.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingSection ? 'Update' : 'Add'} Section
-                </Button>
-              </DialogFooter>
-            </form>
-            
-            <button
-              onClick={handleCloseDialog}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </button>
-          </DialogContent>
-        </Dialog>
+                  Delete All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </PageHeader>
       
       <DataTable
