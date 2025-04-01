@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { toast } from 'sonner';
 
 // Using the provided MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://avadhutchendage015:avadhut@cluster0.78x0q6t.mongodb.net/' || 'mongodb://localhost:27017/scheduler';
+const MONGODB_URI = 'mongodb+srv://avadhutchendage015:avadhut@cluster0.78x0q6t.mongodb.net/';
 
 // Create a MongoDB connection
 const connectMongoDB = async () => {
