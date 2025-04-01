@@ -58,10 +58,21 @@ const scheduleSchema = new Schema<Schedule>({
   sectionId: { type: String, required: true }
 });
 
-// Export models (check if models already exist to avoid overwriting)
-export const InstructorModel = mongoose.models.Instructor || mongoose.model<Instructor>('Instructor', instructorSchema);
-export const CourseModel = mongoose.models.Course || mongoose.model<Course>('Course', courseSchema);
-export const RoomModel = mongoose.models.Room || mongoose.model<Room>('Room', roomSchema);
-export const DepartmentModel = mongoose.models.Department || mongoose.model<Department>('Department', departmentSchema);
-export const SectionModel = mongoose.models.Section || mongoose.model<Section>('Section', sectionSchema);
-export const ScheduleModel = mongoose.models.Schedule || mongoose.model<Schedule>('Schedule', scheduleSchema);
+// Helper function to safely define models
+function getModel<T>(modelName: string, schema: Schema<T>) {
+  // Check if mongoose.models exists before trying to access it
+  if (mongoose.models && mongoose.models[modelName]) {
+    return mongoose.models[modelName] as mongoose.Model<T>;
+  }
+  
+  // If model doesn't exist, create it
+  return mongoose.model<T>(modelName, schema);
+}
+
+// Export models using the helper function
+export const InstructorModel = getModel<Instructor>('Instructor', instructorSchema);
+export const CourseModel = getModel<Course>('Course', courseSchema);
+export const RoomModel = getModel<Room>('Room', roomSchema);
+export const DepartmentModel = getModel<Department>('Department', departmentSchema);
+export const SectionModel = getModel<Section>('Section', sectionSchema);
+export const ScheduleModel = getModel<Schedule>('Schedule', scheduleSchema);
