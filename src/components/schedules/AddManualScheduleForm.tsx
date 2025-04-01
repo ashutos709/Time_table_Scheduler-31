@@ -60,16 +60,16 @@ const AddManualScheduleForm: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button className="bg-skyblue hover:bg-skyblue-600">
           <CalendarPlus className="mr-2 h-4 w-4" />
-          Add Manual Schedule
+          Add Schedule
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Manual Schedule</DialogTitle>
+          <DialogTitle>Add Schedule</DialogTitle>
           <DialogDescription>
-            Manually assign a course to a specific time slot, room, and instructor.
+            Assign a course to a specific time slot, room, and instructor.
           </DialogDescription>
         </DialogHeader>
         
@@ -175,7 +175,7 @@ const AddManualScheduleForm: React.FC = () => {
           </div>
           
           <DialogFooter>
-            <Button type="submit">Add Schedule</Button>
+            <Button type="submit" className="bg-skyblue hover:bg-skyblue-600">Add Schedule</Button>
           </DialogFooter>
         </form>
       </DialogContent>

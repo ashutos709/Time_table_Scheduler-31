@@ -1,8 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import AddManualScheduleForm from '@/components/schedules/AddManualScheduleForm';
@@ -10,7 +9,6 @@ import ScheduleGrid from '@/components/schedules/ScheduleGrid';
 import ScheduleActions from '@/components/schedules/ScheduleActions';
 import SectionSelector from '@/components/schedules/SectionSelector';
 import SchedulingConstraints from '@/components/schedules/SchedulingConstraints';
-import ClearScheduleDialog from '@/components/schedules/ClearScheduleDialog';
 import ScheduleToolbar from '@/components/schedules/ScheduleToolbar';
 
 const SchedulesPage: React.FC = () => {
@@ -18,20 +16,13 @@ const SchedulesPage: React.FC = () => {
     sections, 
     schedules,
     generateSchedule,
-    clearSchedules,
     getScheduleForSection
   } = useScheduler();
   
   const [selectedSection, setSelectedSection] = useState<string>('');
-  const clearDialogTriggerRef = useRef<HTMLButtonElement>(null);
   
   const handleGenerateSchedule = () => {
     generateSchedule();
-  };
-  
-  const handleClearSchedules = () => {
-    clearSchedules();
-    setSelectedSection('');
   };
   
   const handleExportSchedule = () => {
@@ -77,12 +68,6 @@ const SchedulesPage: React.FC = () => {
     toast.success("Schedule exported to CSV");
   };
   
-  const openClearDialog = () => {
-    if (clearDialogTriggerRef.current) {
-      clearDialogTriggerRef.current.click();
-    }
-  };
-  
   const scheduleGrid = selectedSection ? getScheduleForSection(selectedSection) : [];
   
   return (
@@ -98,14 +83,8 @@ const SchedulesPage: React.FC = () => {
             selectedSection={selectedSection}
             onGenerateSchedule={handleGenerateSchedule}
             onExportSchedule={handleExportSchedule}
-            onOpenClearDialog={openClearDialog}
           />
         </div>
-        
-        <ClearScheduleDialog
-          triggerRef={clearDialogTriggerRef}
-          onConfirmClear={handleClearSchedules}
-        />
       </PageHeader>
       
       <div className="flex justify-between items-center space-x-4">

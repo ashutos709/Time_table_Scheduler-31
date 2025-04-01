@@ -12,14 +12,6 @@ import {
 } from './types';
 import { createInitialTimeSlots } from './utils';
 import {
-  generateExampleInstructors,
-  generateExampleRooms,
-  generateExampleDepartments,
-  generateExampleCourses,
-  assignCoursesToDepartments,
-  generateExampleSections
-} from './generateExampleData';
-import {
   generateScheduleForAllSections,
   getScheduleGridForSection
 } from './schedulingLogic';
@@ -80,7 +72,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [sections, setSections] = useState<Section[]>([]);
   const [timeSlots] = useState<TimeSlot[]>(createInitialTimeSlots());
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [examplesAdded, setExamplesAdded] = useState(false);
   
   useEffect(() => {
     const { 
@@ -89,8 +80,7 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       rooms: storedRooms,
       departments: storedDepartments,
       sections: storedSections,
-      schedules: storedSchedules,
-      examplesAdded: storedExamplesAdded
+      schedules: storedSchedules
     } = loadAllData();
     
     if (storedInstructors?.length) setInstructors(storedInstructors);
@@ -99,32 +89,7 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (storedDepartments?.length) setDepartments(storedDepartments);
     if (storedSections?.length) setSections(storedSections);
     if (storedSchedules?.length) setSchedules(storedSchedules);
-    if (storedExamplesAdded) setExamplesAdded(!!storedExamplesAdded);
-    
-    const populateExampleData = async () => {
-      if (instructors.length === 0 && courses.length === 0 && !examplesAdded) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const exampleInstructors = generateExampleInstructors();
-        const exampleRooms = generateExampleRooms();
-        const exampleDepartments = generateExampleDepartments();
-        const exampleCourses = generateExampleCourses(exampleInstructors);
-        const updatedDepartments = assignCoursesToDepartments(exampleDepartments, exampleCourses);
-        const exampleSections = generateExampleSections(updatedDepartments);
-        
-        setInstructors(exampleInstructors);
-        setRooms(exampleRooms);
-        setCourses(exampleCourses);
-        setDepartments(updatedDepartments);
-        setSections(exampleSections);
-        setExamplesAdded(true);
-        
-        toast.success('Example data has been loaded');
-      }
-    };
-    
-    populateExampleData();
-  }, [instructors.length, courses.length, examplesAdded]);
+  }, []);
   
   useEffect(() => {
     saveToLocalStorage('instructors', instructors);
@@ -149,10 +114,6 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     saveToLocalStorage('schedules', schedules);
   }, [schedules]);
-  
-  useEffect(() => {
-    saveToLocalStorage('examplesAdded', examplesAdded);
-  }, [examplesAdded]);
   
   const getInstructorById = (id: string) => instructors.find(i => i.id === id);
   const getCourseById = (id: string) => courses.find(c => c.id === id);

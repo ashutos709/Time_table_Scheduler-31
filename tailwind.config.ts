@@ -63,18 +63,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				teal: {
-					DEFAULT: '#00BFA6',
-					50: '#E6FFF8',
-					100: '#CCFFF3',
-					200: '#99FFE6',
-					300: '#66FFD9',
-					400: '#33FFCC',
-					500: '#00FFBF',
-					600: '#00CCAA',
-					700: '#00A090',
-					800: '#007A66',
-					900: '#005A4C',
+				skyblue: {
+					DEFAULT: '#33C3F0',
+					50: '#E8F7FC',
+					100: '#D1EFF9',
+					200: '#A3DFF3',
+					300: '#75CFED',
+					400: '#47BFE7',
+					500: '#33C3F0',
+					600: '#1EAFE1',
+					700: '#1991BC',
+					800: '#147297',
+					900: '#0F5472',
 				}
 			},
 			borderRadius: {

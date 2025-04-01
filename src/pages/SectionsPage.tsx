@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
@@ -47,7 +48,6 @@ const SectionsPage: React.FC = () => {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
-  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -102,13 +102,6 @@ const SectionsPage: React.FC = () => {
     }
     
     handleCloseDialog();
-  };
-  
-  const handleDeleteAllSections = () => {
-    sections.forEach(section => {
-      deleteSection(section.id);
-    });
-    setIsDeleteAllDialogOpen(false);
   };
   
   const columns: Column<Section>[] = [
@@ -181,7 +174,7 @@ const SectionsPage: React.FC = () => {
         <div className="flex space-x-2">
           <Dialog open={isAddDialogOpen || !!editingSection} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Button onClick={() => setIsAddDialogOpen(true)} className="bg-skyblue hover:bg-skyblue-600">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Section
               </Button>
@@ -232,7 +225,7 @@ const SectionsPage: React.FC = () => {
                   <Button type="button" variant="outline" onClick={handleCloseDialog}>
                     Cancel
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" className="bg-skyblue hover:bg-skyblue-600">
                     {editingSection ? 'Update' : 'Add'} Section
                   </Button>
                 </DialogFooter>
@@ -247,32 +240,6 @@ const SectionsPage: React.FC = () => {
               </button>
             </DialogContent>
           </Dialog>
-
-          <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={sections.length === 0}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete All Sections
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete All Sections</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete all {sections.length} sections. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={handleDeleteAllSections}
-                >
-                  Delete All
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </PageHeader>
       
@@ -286,7 +253,7 @@ const SectionsPage: React.FC = () => {
             <p className="text-sm text-muted-foreground">
               Add sections to start creating schedules.
             </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)} className="bg-skyblue hover:bg-skyblue-600">
               <Plus className="mr-2 h-4 w-4" />
               Add Section
             </Button>

@@ -20,7 +20,7 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         variant="outline"
         size="sm"
         onClick={onGenerateSchedule}
-        className="hidden sm:flex"
+        className="hidden sm:flex border-skyblue/30 text-skyblue hover:text-skyblue-600"
       >
         <RefreshCw className="mr-2 h-4 w-4" />
         Generate Schedule
@@ -31,7 +31,7 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         size="sm"
         onClick={onExportSchedule}
         disabled={!selectedSection}
-        className="hidden sm:flex"
+        className="hidden sm:flex border-skyblue/30 text-skyblue hover:text-skyblue-600"
       >
         <FileDown className="mr-2 h-4 w-4" />
         Export CSV

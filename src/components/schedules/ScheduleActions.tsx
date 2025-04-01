@@ -3,8 +3,7 @@ import React from 'react';
 import { 
   ChevronDown,
   RefreshCw, 
-  FileDown, 
-  Trash2 
+  FileDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,19 +19,17 @@ interface ScheduleActionsProps {
   selectedSection: string;
   onGenerateSchedule: () => void;
   onExportSchedule: () => void;
-  onOpenClearDialog: () => void;
 }
 
 const ScheduleActions: React.FC<ScheduleActionsProps> = ({
   selectedSection,
   onGenerateSchedule,
-  onExportSchedule,
-  onOpenClearDialog,
+  onExportSchedule
 }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="border-skyblue/30 text-skyblue hover:text-skyblue-600">
           Actions
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
@@ -50,14 +47,6 @@ const ScheduleActions: React.FC<ScheduleActionsProps> = ({
         >
           <FileDown className="mr-2 h-4 w-4" />
           Export as CSV
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={onOpenClearDialog}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Clear All Schedules
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
