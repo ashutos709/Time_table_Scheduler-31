@@ -17,7 +17,8 @@ import {
 } from './schedulingLogic';
 import {
   loadAllData,
-  saveToLocalStorage
+  saveToLocalStorage,
+  saveAllData
 } from './persistenceUtils';
 
 export interface SchedulerContextType {
@@ -72,48 +73,51 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [sections, setSections] = useState<Section[]>([]);
   const [timeSlots] = useState<TimeSlot[]>(createInitialTimeSlots());
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const { 
-      instructors: storedInstructors, 
-      courses: storedCourses, 
-      rooms: storedRooms,
-      departments: storedDepartments,
-      sections: storedSections,
-      schedules: storedSchedules
-    } = loadAllData();
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const { 
+          instructors: storedInstructors, 
+          courses: storedCourses, 
+          rooms: storedRooms,
+          departments: storedDepartments,
+          sections: storedSections,
+          schedules: storedSchedules
+        } = await loadAllData();
+        
+        if (storedInstructors?.length) setInstructors(storedInstructors);
+        if (storedCourses?.length) setCourses(storedCourses);
+        if (storedRooms?.length) setRooms(storedRooms);
+        if (storedDepartments?.length) setDepartments(storedDepartments);
+        if (storedSections?.length) setSections(storedSections);
+        if (storedSchedules?.length) setSchedules(storedSchedules);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error('Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (storedInstructors?.length) setInstructors(storedInstructors);
-    if (storedCourses?.length) setCourses(storedCourses);
-    if (storedRooms?.length) setRooms(storedRooms);
-    if (storedDepartments?.length) setDepartments(storedDepartments);
-    if (storedSections?.length) setSections(storedSections);
-    if (storedSchedules?.length) setSchedules(storedSchedules);
+    loadData();
   }, []);
   
   useEffect(() => {
-    saveToLocalStorage('instructors', instructors);
-  }, [instructors]);
-  
-  useEffect(() => {
-    saveToLocalStorage('courses', courses);
-  }, [courses]);
-  
-  useEffect(() => {
-    saveToLocalStorage('rooms', rooms);
-  }, [rooms]);
-  
-  useEffect(() => {
-    saveToLocalStorage('departments', departments);
-  }, [departments]);
-  
-  useEffect(() => {
-    saveToLocalStorage('sections', sections);
-  }, [sections]);
-  
-  useEffect(() => {
-    saveToLocalStorage('schedules', schedules);
-  }, [schedules]);
+    if (!isLoading) {
+      saveAllData({
+        instructors,
+        courses,
+        rooms,
+        departments,
+        sections,
+        schedules,
+        examplesAdded: true
+      });
+    }
+  }, [instructors, courses, rooms, departments, sections, schedules, isLoading]);
   
   const getInstructorById = (id: string) => instructors.find(i => i.id === id);
   const getCourseById = (id: string) => courses.find(c => c.id === id);
@@ -439,7 +443,14 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   return (
     <SchedulerContext.Provider value={contextValue}>
-      {children}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-skyblue"></div>
+          <span className="ml-3 text-lg text-skyblue">Loading data...</span>
+        </div>
+      ) : (
+        children
+      )}
     </SchedulerContext.Provider>
   );
 };

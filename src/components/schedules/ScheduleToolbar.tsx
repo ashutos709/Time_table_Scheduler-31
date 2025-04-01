@@ -1,7 +1,9 @@
 
-import React from 'react';
-import { RefreshCw, FileDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RefreshCw, FileDown, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import connectMongoDB from '@/lib/mongodb';
 
 interface ScheduleToolbarProps {
   selectedSection: string;
@@ -14,6 +16,24 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
   onGenerateSchedule,
   onExportSchedule,
 }) => {
+  const [dbStatus, setDbStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
+  
+  useEffect(() => {
+    const checkDbConnection = async () => {
+      try {
+        setDbStatus('checking');
+        await connectMongoDB();
+        setDbStatus('connected');
+      } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+        setDbStatus('disconnected');
+        toast.error('Database connection failed');
+      }
+    };
+    
+    checkDbConnection();
+  }, []);
+  
   return (
     <div className="flex space-x-2">
       <Button
@@ -35,6 +55,25 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       >
         <FileDown className="mr-2 h-4 w-4" />
         Export CSV
+      </Button>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        className={`hidden sm:flex ${
+          dbStatus === 'connected' 
+            ? 'border-green-500/30 text-green-500' 
+            : dbStatus === 'disconnected'
+              ? 'border-red-500/30 text-red-500'
+              : 'border-yellow-500/30 text-yellow-500'
+        }`}
+      >
+        <Database className="mr-2 h-4 w-4" />
+        {dbStatus === 'connected' 
+          ? 'Database Connected' 
+          : dbStatus === 'disconnected'
+            ? 'Database Disconnected'
+            : 'Checking Connection...'}
       </Button>
     </div>
   );
