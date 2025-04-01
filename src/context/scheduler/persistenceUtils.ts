@@ -1,3 +1,4 @@
+
 import { Instructor, Course, Room, Department, Section, Schedule } from './types';
 import connectMongoDB from '@/lib/mongodb';
 import { 
@@ -10,7 +11,7 @@ import {
 } from '@/models';
 import { toast } from 'sonner';
 
-const saveToLocalStorage = (key: string, data: any) => {
+export const saveToLocalStorage = (key: string, data: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
     return true;
