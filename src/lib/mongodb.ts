@@ -2,8 +2,8 @@
 import mongoose from 'mongoose';
 import { toast } from 'sonner';
 
-// MongoDB connection URI (should be replaced with your actual MongoDB URI)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scheduler';
+// Use import.meta.env instead of process.env for Vite projects
+const MONGODB_URI = import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017/scheduler';
 
 // Create a MongoDB connection
 const connectMongoDB = async () => {
