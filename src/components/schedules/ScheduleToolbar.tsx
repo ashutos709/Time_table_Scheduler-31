@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, FileDown, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import connectMongoDB from '@/lib/mongodb';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScheduleToolbarProps {
   selectedSection: string;
@@ -22,10 +22,18 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     const checkDbConnection = async () => {
       try {
         setDbStatus('checking');
-        await connectMongoDB();
-        setDbStatus('connected');
+        // Check if we can connect to Supabase by making a simple query
+        const { error } = await supabase.from('instructors').select('id').limit(1);
+        
+        if (error) {
+          console.error('Failed to connect to Supabase:', error);
+          setDbStatus('disconnected');
+          toast.error('Supabase connection failed');
+        } else {
+          setDbStatus('connected');
+        }
       } catch (error) {
-        console.error('Failed to connect to MongoDB:', error);
+        console.error('Failed to connect to Supabase:', error);
         setDbStatus('disconnected');
         toast.error('Database connection failed');
       }
@@ -70,9 +78,9 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       >
         <Database className="mr-2 h-4 w-4" />
         {dbStatus === 'connected' 
-          ? 'Database Connected' 
+          ? 'Supabase Connected' 
           : dbStatus === 'disconnected'
-            ? 'Database Disconnected'
+            ? 'Supabase Disconnected'
             : 'Checking Connection...'}
       </Button>
     </div>

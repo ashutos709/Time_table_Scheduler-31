@@ -1,22 +1,25 @@
 
-import mongoose from 'mongoose';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Using the provided MongoDB connection string
-const MONGODB_URI = 'mongodb+srv://avadhutchendage015:avadhut@cluster0.78x0q6t.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+// This file is kept for backward compatibility and renamed functionality
+// It now provides a connection check for Supabase instead of MongoDB
 
-// Create a MongoDB connection
 const connectMongoDB = async () => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      return mongoose.connection;
+    // Check if we can connect to Supabase by making a simple query
+    const { error } = await supabase.from('instructors').select('id').limit(1);
+    
+    if (error) {
+      console.error('Supabase connection error:', error);
+      toast.error('Failed to connect to database');
+      throw error;
     }
-
-    const conn = await mongoose.connect(MONGODB_URI);
-    console.log(`MongoDB connected: ${conn.connection.host}`);
-    return conn;
+    
+    console.log(`Supabase connected successfully`);
+    return supabase;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('Database connection error:', error);
     toast.error('Failed to connect to database');
     throw error;
   }
