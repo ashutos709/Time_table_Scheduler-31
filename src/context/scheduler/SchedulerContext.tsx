@@ -11,7 +11,6 @@ import {
   Schedule,
 } from './types';
 import { SchedulerContextType } from './types/contextTypes';
-import { createInitialTimeSlots } from './utils';
 import { loadAllData, saveAllData } from './persistenceUtils';
 import { createInstructorOperations } from './operations/instructorOperations';
 import { createCourseOperations } from './operations/courseOperations';
@@ -97,24 +96,16 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const { 
-          instructors: storedInstructors, 
-          courses: storedCourses, 
-          rooms: storedRooms,
-          departments: storedDepartments,
-          sections: storedSections,
-          schedules: storedSchedules,
-          timeSlots: storedTimeSlots
-        } = await loadAllData();
+        const data = await loadAllData();
         
-        if (storedInstructors?.length) setInstructors(storedInstructors);
-        if (storedCourses?.length) setCourses(storedCourses);
-        if (storedRooms?.length) setRooms(storedRooms);
-        if (storedDepartments?.length) setDepartments(storedDepartments);
-        if (storedSections?.length) setSections(storedSections);
-        if (storedSchedules?.length) setSchedules(storedSchedules);
-        if (storedTimeSlots?.length) {
-          setTimeSlots(storedTimeSlots);
+        if (data.instructors?.length) setInstructors(data.instructors);
+        if (data.courses?.length) setCourses(data.courses);
+        if (data.rooms?.length) setRooms(data.rooms);
+        if (data.departments?.length) setDepartments(data.departments);
+        if (data.sections?.length) setSections(data.sections);
+        if (data.schedules?.length) setSchedules(data.schedules);
+        if (data.timeSlots?.length) {
+          setTimeSlots(data.timeSlots);
         } else {
           // We're no longer initializing default time slots here
           setTimeSlots([]);
