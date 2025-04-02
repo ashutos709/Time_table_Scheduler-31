@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
@@ -99,15 +98,17 @@ const TimeSlotsPage: React.FC = () => {
     },
     {
       header: 'Actions',
-      cell: (info) => (
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => deleteTimeSlot(info.original.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      ),
+      cell: (info) => {
+        return (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => deleteTimeSlot(info.row.original.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        );
+      }
     }
   ];
   

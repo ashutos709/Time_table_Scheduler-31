@@ -60,21 +60,29 @@ export const saveToMongoDB = async <T>(model: any, data: T[]): Promise<boolean> 
   }
 };
 
-// Generic type to handle different table data types
-type SupabaseTableMapping<T> = {
+// Define proper table mappings with explicitly typed transforms
+interface TableConfig<T> {
   table: 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'time_slots';
   transform?: (data: T) => any;
-};
+}
 
-const tableMapping = {
-  instructors: { table: 'instructors' as const },
-  courses: { table: 'courses' as const },
-  rooms: { table: 'rooms' as const },
-  departments: { table: 'departments' as const },
-  sections: { table: 'sections' as const },
-  schedules: { table: 'schedules' as const },
+const tableMapping: {
+  instructors: TableConfig<Instructor>;
+  courses: TableConfig<Course>;
+  rooms: TableConfig<Room>;
+  departments: TableConfig<Department>;
+  sections: TableConfig<Section>;
+  schedules: TableConfig<Schedule>;
+  timeSlots: TableConfig<TimeSlot>;
+} = {
+  instructors: { table: 'instructors' },
+  courses: { table: 'courses' },
+  rooms: { table: 'rooms' },
+  departments: { table: 'departments' },
+  sections: { table: 'sections' },
+  schedules: { table: 'schedules' },
   timeSlots: { 
-    table: 'time_slots' as const,
+    table: 'time_slots',
     transform: (slot: TimeSlot) => ({
       id: slot.id,
       day: slot.day,
@@ -87,7 +95,8 @@ const tableMapping = {
 // Save data to Supabase with proper type mapping
 export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, data: T[]): Promise<boolean> => {
   try {
-    const { table, transform } = tableMapping[tableKey];
+    const mapping = tableMapping[tableKey];
+    const table = mapping.table;
     
     // First delete all existing records
     const { error: deleteError } = await supabase
@@ -99,11 +108,15 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
     
     // Then insert new data if we have any
     if (data && data.length > 0) {
-      const transformedData = transform ? data.map(transform) : data;
+      // Apply transform if it exists, otherwise use data as is
+      const transformedData = mapping.transform 
+        ? data.map(item => mapping.transform!(item)) 
+        : data;
       
+      // Cast transformedData to any to bypass strict type checking
       const { error: insertError } = await supabase
         .from(table)
-        .insert(transformedData);
+        .insert(transformedData as any);
       
       if (insertError) throw insertError;
     }
