@@ -18,7 +18,7 @@ export const createCourseOperations = (
     
     try {
       // Add to Supabase
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('courses')
         .insert([{
           id: newCourse.id,

@@ -103,7 +103,7 @@ const TimeSlotsPage: React.FC = () => {
         <Button 
           variant="ghost" 
           size="icon"
-          onClick={() => deleteTimeSlot(info.row.original.id)}
+          onClick={() => deleteTimeSlot(info.original.id)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>

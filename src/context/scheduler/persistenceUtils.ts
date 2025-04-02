@@ -39,7 +39,7 @@ export interface StoredData {
   departments: Department[];
   sections: Section[];
   schedules: Schedule[];
-  timeSlots: TimeSlot[]; // Added this to fix type error
+  timeSlots: TimeSlot[];
   examplesAdded: boolean;
 }
 
@@ -60,9 +60,35 @@ export const saveToMongoDB = async <T>(model: any, data: T[]): Promise<boolean> 
   }
 };
 
-// Save data to Supabase
-export const saveToSupabase = async <T>(table: string, data: T[]): Promise<boolean> => {
+// Generic type to handle different table data types
+type SupabaseTableMapping<T> = {
+  table: 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'time_slots';
+  transform?: (data: T) => any;
+};
+
+const tableMapping = {
+  instructors: { table: 'instructors' as const },
+  courses: { table: 'courses' as const },
+  rooms: { table: 'rooms' as const },
+  departments: { table: 'departments' as const },
+  sections: { table: 'sections' as const },
+  schedules: { table: 'schedules' as const },
+  timeSlots: { 
+    table: 'time_slots' as const,
+    transform: (slot: TimeSlot) => ({
+      id: slot.id,
+      day: slot.day,
+      start_time: slot.startTime,
+      end_time: slot.endTime
+    })
+  }
+};
+
+// Save data to Supabase with proper type mapping
+export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, data: T[]): Promise<boolean> => {
   try {
+    const { table, transform } = tableMapping[tableKey];
+    
     // First delete all existing records
     const { error: deleteError } = await supabase
       .from(table)
@@ -73,31 +99,49 @@ export const saveToSupabase = async <T>(table: string, data: T[]): Promise<boole
     
     // Then insert new data if we have any
     if (data && data.length > 0) {
+      const transformedData = transform ? data.map(transform) : data;
+      
       const { error: insertError } = await supabase
         .from(table)
-        .insert(data);
+        .insert(transformedData);
       
       if (insertError) throw insertError;
     }
     
     return true;
   } catch (error) {
-    console.error(`Error saving to Supabase (${table}):`, error);
+    console.error(`Error saving to Supabase (${tableKey}):`, error);
     return false;
   }
 };
 
-// Load data from Supabase
-export const loadFromSupabase = async <T>(table: string): Promise<T[]> => {
+// Transform time_slots data back to our TimeSlot format
+const transformTimeSlot = (dbSlot: any): TimeSlot => ({
+  id: dbSlot.id,
+  day: dbSlot.day,
+  startTime: dbSlot.start_time,
+  endTime: dbSlot.end_time
+});
+
+// Load data from Supabase with proper type mapping
+export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): Promise<T[]> => {
   try {
+    const { table } = tableMapping[tableKey];
+    
     const { data, error } = await supabase
       .from(table)
       .select('*');
     
     if (error) throw error;
+    
+    // Transform time_slots data if needed
+    if (tableKey === 'timeSlots' && data) {
+      return data.map(transformTimeSlot) as unknown as T[];
+    }
+    
     return data as T[] || [];
   } catch (error) {
-    console.error(`Error loading from Supabase (${table}):`, error);
+    console.error(`Error loading from Supabase (${tableKey}):`, error);
     return [];
   }
 };
@@ -124,7 +168,7 @@ export const saveAllData = async (data: StoredData): Promise<void> => {
       saveToSupabase('departments', data.departments),
       saveToSupabase('sections', data.sections),
       saveToSupabase('schedules', data.schedules),
-      saveToSupabase('time_slots', data.timeSlots)
+      saveToSupabase('timeSlots', data.timeSlots)
     ]);
     
     const allSupabaseSuccess = supabaseSaves.every(success => success);
@@ -177,7 +221,7 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
       loadFromSupabase<Department>('departments'),
       loadFromSupabase<Section>('sections'),
       loadFromSupabase<Schedule>('schedules'),
-      loadFromSupabase<TimeSlot>('time_slots')
+      loadFromSupabase<TimeSlot>('timeSlots')
     ]);
     
     const hasSupabaseData = 
