@@ -2,10 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// This file is kept for backward compatibility and renamed functionality
-// It now provides a connection check for Supabase instead of MongoDB
-
-const connectMongoDB = async () => {
+// This file replaces the old mongodb.ts file with Supabase functionality
+const connectDB = async () => {
   try {
     // Check if we can connect to Supabase by making a simple query
     const { error } = await supabase.from('time_slots').select('id').limit(1);
@@ -25,4 +23,4 @@ const connectMongoDB = async () => {
   }
 };
 
-export default connectMongoDB;
+export default connectDB;

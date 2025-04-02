@@ -11,7 +11,7 @@ import {
   Schedule,
 } from './types';
 import { SchedulerContextType } from './types/contextTypes';
-import { loadAllData, saveAllData } from './persistenceUtils';
+import { loadAllData, saveAllData } from './persistence';
 import { createInstructorOperations } from './operations/instructorOperations';
 import { createCourseOperations } from './operations/courseOperations';
 import { createRoomOperations } from './operations/roomOperations';
