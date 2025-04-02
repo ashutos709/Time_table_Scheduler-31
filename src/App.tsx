@@ -15,33 +15,38 @@ import SectionsPage from "@/pages/SectionsPage";
 import TimeSlotsPage from "@/pages/TimeSlotsPage";
 import SchedulesPage from "@/pages/SchedulesPage";
 import NotFound from "@/pages/NotFound";
+import { useState } from "react";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SchedulerProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/instructors" element={<InstructorsPage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/rooms" element={<RoomsPage />} />
-              <Route path="/departments" element={<DepartmentsPage />} />
-              <Route path="/sections" element={<SectionsPage />} />
-              <Route path="/time-slots" element={<TimeSlotsPage />} />
-              <Route path="/schedules" element={<SchedulesPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </TooltipProvider>
-    </SchedulerProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Create a new QueryClient instance inside the component
+  // This ensures React hooks are used in the component context
+  const [queryClient] = useState(() => new QueryClient());
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SchedulerProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/instructors" element={<InstructorsPage />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/rooms" element={<RoomsPage />} />
+                <Route path="/departments" element={<DepartmentsPage />} />
+                <Route path="/sections" element={<SectionsPage />} />
+                <Route path="/time-slots" element={<TimeSlotsPage />} />
+                <Route path="/schedules" element={<SchedulesPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SchedulerProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
