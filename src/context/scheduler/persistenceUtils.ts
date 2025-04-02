@@ -1,14 +1,5 @@
 
 import { Instructor, Course, Room, Department, Section, Schedule, TimeSlot } from './types';
-import connectMongoDB from '@/lib/mongodb';
-import { 
-  InstructorModel, 
-  CourseModel, 
-  RoomModel, 
-  DepartmentModel, 
-  SectionModel, 
-  ScheduleModel 
-} from '@/models';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,23 +33,6 @@ export interface StoredData {
   timeSlots: TimeSlot[];
   examplesAdded: boolean;
 }
-
-export const saveToMongoDB = async <T>(model: any, data: T[]): Promise<boolean> => {
-  try {
-    await connectMongoDB();
-    
-    await model.deleteMany({});
-    if (data.length > 0) {
-      await model.insertMany(data);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`Error saving to MongoDB:`, error);
-    toast.error(`Failed to save data to database`);
-    return false;
-  }
-};
 
 // Define proper table mappings with explicitly typed transforms
 interface TableConfig<T> {
@@ -109,9 +83,16 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
     // Then insert new data if we have any
     if (data && data.length > 0) {
       // Apply transform if it exists, otherwise use data as is
-      const transformedData = mapping.transform 
-        ? data.map(item => mapping.transform!(item)) 
-        : data;
+      let transformedData;
+      
+      if (mapping.transform) {
+        // Type assertion to help TypeScript understand this operation
+        transformedData = (data as any[]).map(item => 
+          mapping.transform ? mapping.transform(item as any) : item
+        );
+      } else {
+        transformedData = data;
+      }
       
       // Cast transformedData to any to bypass strict type checking
       const { error: insertError } = await supabase
@@ -159,21 +140,9 @@ export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): 
   }
 };
 
-export const loadFromMongoDB = async <T>(model: any): Promise<T[]> => {
-  try {
-    await connectMongoDB();
-    const data = await model.find({}).lean();
-    return data as T[];
-  } catch (error) {
-    console.error(`Error loading from MongoDB:`, error);
-    toast.error(`Failed to load data from database`);
-    return [];
-  }
-};
-
 export const saveAllData = async (data: StoredData): Promise<void> => {
   try {
-    // Try to save to Supabase first
+    // Try to save to Supabase
     const supabaseSaves = await Promise.all([
       saveToSupabase('instructors', data.instructors),
       saveToSupabase('courses', data.courses),
@@ -189,17 +158,7 @@ export const saveAllData = async (data: StoredData): Promise<void> => {
     if (allSupabaseSuccess) {
       toast.success('Data saved to Supabase');
     } else {
-      // Fall back to MongoDB if Supabase fails
-      await connectMongoDB();
-      
-      await saveToMongoDB(InstructorModel, data.instructors);
-      await saveToMongoDB(CourseModel, data.courses);
-      await saveToMongoDB(RoomModel, data.rooms);
-      await saveToMongoDB(DepartmentModel, data.departments);
-      await saveToMongoDB(SectionModel, data.sections);
-      await saveToMongoDB(ScheduleModel, data.schedules);
-      
-      toast.success('Data saved to MongoDB');
+      toast.error('Error saving data to Supabase');
     }
     
     // Always save to localStorage as a backup
@@ -218,7 +177,7 @@ export const saveAllData = async (data: StoredData): Promise<void> => {
 
 export const loadAllData = async (): Promise<Partial<StoredData>> => {
   try {
-    // Try to load from Supabase first
+    // Try to load from Supabase
     const [
       instructorsData,
       coursesData,
@@ -260,43 +219,7 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
       };
     }
     
-    // Fall back to MongoDB if no Supabase data
-    toast.info('No data found in Supabase, trying MongoDB...');
-    
-    await connectMongoDB();
-    
-    const [instructors, courses, rooms, departments, sections, schedules] = await Promise.all([
-      loadFromMongoDB<Instructor>(InstructorModel),
-      loadFromMongoDB<Course>(CourseModel),
-      loadFromMongoDB<Room>(RoomModel),
-      loadFromMongoDB<Department>(DepartmentModel),
-      loadFromMongoDB<Section>(SectionModel),
-      loadFromMongoDB<Schedule>(ScheduleModel),
-    ]);
-    
-    const hasMongoData = 
-      instructors.length > 0 || 
-      courses.length > 0 || 
-      rooms.length > 0 || 
-      departments.length > 0 || 
-      sections.length > 0 || 
-      schedules.length > 0;
-    
-    if (hasMongoData) {
-      toast.success('Data loaded from MongoDB');
-      return {
-        instructors,
-        courses,
-        rooms,
-        departments,
-        sections,
-        schedules,
-        timeSlots: loadFromLocalStorage<TimeSlot[]>('timeSlots') || [],
-        examplesAdded: true
-      };
-    }
-    
-    toast.info('No data found in MongoDB, loading from local storage');
+    toast.info('No data found in Supabase, loading from local storage');
     return {
       instructors: loadFromLocalStorage<Instructor[]>('instructors') || [],
       courses: loadFromLocalStorage<Course[]>('courses') || [],
@@ -309,7 +232,7 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
     };
   } catch (error) {
     console.error('Error loading data:', error);
-    toast.error('Failed to load data from databases, falling back to localStorage');
+    toast.error('Failed to load data from database, falling back to localStorage');
     
     return {
       instructors: loadFromLocalStorage<Instructor[]>('instructors') || [],
