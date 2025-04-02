@@ -19,6 +19,7 @@ import { createRoomOperations } from './operations/roomOperations';
 import { createDepartmentOperations } from './operations/departmentOperations';
 import { createSectionOperations } from './operations/sectionOperations';
 import { createScheduleOperations } from './operations/scheduleOperations';
+import { v4 as uuidv4 } from 'uuid';
 
 const SchedulerContext = createContext<SchedulerContextType | undefined>(undefined);
 
@@ -28,12 +29,47 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [rooms, setRooms] = useState<Room[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
-  const [timeSlots] = useState<TimeSlot[]>(createInitialTimeSlots());
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Get operations
   const getTimeSlotById = (id: string) => timeSlots.find(t => t.id === id);
+  
+  // Time slot operations
+  const addTimeSlot = (timeSlotData: Omit<TimeSlot, 'id'>) => {
+    const newTimeSlot: TimeSlot = {
+      ...timeSlotData,
+      id: uuidv4()
+    };
+    setTimeSlots(prev => [...prev, newTimeSlot]);
+    toast.success('Time slot added successfully');
+  };
+  
+  const deleteTimeSlot = (id: string) => {
+    // Check if time slot is used in any schedule
+    const isUsed = schedules.some(schedule => schedule.timeSlotId === id);
+    
+    if (isUsed) {
+      toast.error('Cannot delete time slot that is in use');
+      return;
+    }
+    
+    setTimeSlots(prev => prev.filter(ts => ts.id !== id));
+    toast.success('Time slot deleted successfully');
+  };
+  
+  const clearTimeSlots = () => {
+    // Check if any time slots are used in schedules
+    const usedTimeSlotIds = schedules.map(schedule => schedule.timeSlotId);
+    if (usedTimeSlotIds.length > 0) {
+      toast.error('Cannot clear time slots that are in use');
+      return;
+    }
+    
+    setTimeSlots([]);
+    toast.success('All time slots have been cleared');
+  };
   
   const instructorOps = createInstructorOperations(instructors, setInstructors, courses);
   const courseOps = createCourseOperations(courses, setCourses, departments);
@@ -67,7 +103,8 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           rooms: storedRooms,
           departments: storedDepartments,
           sections: storedSections,
-          schedules: storedSchedules
+          schedules: storedSchedules,
+          timeSlots: storedTimeSlots
         } = await loadAllData();
         
         if (storedInstructors?.length) setInstructors(storedInstructors);
@@ -76,6 +113,12 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (storedDepartments?.length) setDepartments(storedDepartments);
         if (storedSections?.length) setSections(storedSections);
         if (storedSchedules?.length) setSchedules(storedSchedules);
+        if (storedTimeSlots?.length) {
+          setTimeSlots(storedTimeSlots);
+        } else {
+          // We're no longer initializing default time slots here
+          setTimeSlots([]);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
         toast.error('Failed to load data');
@@ -96,10 +139,11 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         departments,
         sections,
         schedules,
+        timeSlots,
         examplesAdded: true
       });
     }
-  }, [instructors, courses, rooms, departments, sections, schedules, isLoading]);
+  }, [instructors, courses, rooms, departments, sections, schedules, timeSlots, isLoading]);
   
   const contextValue: SchedulerContextType = {
     instructors,
@@ -116,6 +160,10 @@ export const SchedulerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ...departmentOps,
     ...sectionOps,
     ...scheduleOps,
+    
+    addTimeSlot,
+    deleteTimeSlot,
+    clearTimeSlots,
     
     getTimeSlotById
   };

@@ -39,6 +39,11 @@ export interface SchedulerContextType {
   updateSection: (section: Section) => void;
   deleteSection: (id: string) => void;
   
+  // New time slot methods
+  addTimeSlot: (timeSlot: Omit<TimeSlot, 'id'>) => void;
+  deleteTimeSlot: (id: string) => void;
+  clearTimeSlots: () => void;
+  
   generateSchedule: () => void;
   getScheduleForSection: (sectionId: string) => ScheduleCell[][];
   clearSchedules: () => void;

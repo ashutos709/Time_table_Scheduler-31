@@ -6,7 +6,7 @@ import DataTable, { Column } from '@/components/ui/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, X, Clock } from 'lucide-react';
+import { Plus, X, Clock, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,11 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TimeSlot, DAYS, TIME_SLOTS } from '@/types';
+import { TimeSlot, DAYS } from '@/types';
+import { toast } from 'sonner';
 
 const TimeSlotsPage: React.FC = () => {
   const { 
-    timeSlots
+    timeSlots,
+    addTimeSlot,
+    deleteTimeSlot,
+    clearTimeSlots
   } = useScheduler();
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -44,6 +48,41 @@ const TimeSlotsPage: React.FC = () => {
       [field]: value
     }));
   };
+
+  const handleAddCustomTimeSlot = () => {
+    const { day, startTime, endTime } = customTimeSlot;
+    
+    if (!day || !startTime || !endTime) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    
+    if (startTime >= endTime) {
+      toast.error('Start time must be before end time');
+      return;
+    }
+    
+    addTimeSlot({
+      day,
+      startTime,
+      endTime
+    });
+    
+    toast.success('Time slot added successfully!');
+    setCustomTimeSlot({
+      day: DAYS[0],
+      startTime: '',
+      endTime: ''
+    });
+    setIsCustomDialogOpen(false);
+  };
+
+  const handleClearAllTimeSlots = () => {
+    if (confirm('Are you sure you want to delete all time slots? This action cannot be undone.')) {
+      clearTimeSlots();
+      toast.success('All time slots have been deleted');
+    }
+  };
   
   const columns: Column<TimeSlot>[] = [
     {
@@ -58,28 +97,40 @@ const TimeSlotsPage: React.FC = () => {
       header: 'End Time',
       accessorKey: 'endTime' as keyof TimeSlot,
     },
+    {
+      header: 'Actions',
+      cell: ({ row }) => (
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => deleteTimeSlot(row.original.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    }
   ];
   
   return (
     <div className="space-y-6">
       <PageHeader
         title="Time Slots"
-        description="View available time slots for scheduling."
+        description="Manage custom time slots for scheduling."
       >
         <div className="flex space-x-2">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button disabled>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Time Slot
+                About Time Slots
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Time Slots</DialogTitle>
                 <DialogDescription>
-                  Time slots are pre-defined in the system. 
-                  They follow the standard academic scheduling periods.
+                  Time slots define when classes can be scheduled throughout the week.
+                  You can create custom time slots based on your institution's schedule.
                 </DialogDescription>
               </DialogHeader>
               
@@ -90,17 +141,6 @@ const TimeSlotsPage: React.FC = () => {
                     {DAYS.map((day) => (
                       <div key={day} className="bg-secondary p-2 rounded text-center">
                         {day}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="font-medium">Available Time Slots</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {TIME_SLOTS.map((slot, index) => (
-                      <div key={index} className="bg-secondary p-2 rounded text-center">
-                        {slot.start} - {slot.end}
                       </div>
                     ))}
                   </div>
@@ -127,7 +167,7 @@ const TimeSlotsPage: React.FC = () => {
             <DialogTrigger asChild>
               <Button>
                 <Clock className="mr-2 h-4 w-4" />
-                Custom Time Slot
+                Add Custom Time Slot
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
@@ -135,7 +175,6 @@ const TimeSlotsPage: React.FC = () => {
                 <DialogTitle>Custom Time Slot</DialogTitle>
                 <DialogDescription>
                   Create a custom time slot for your scheduling needs.
-                  Note: This is a demo feature - custom time slots are not currently supported.
                 </DialogDescription>
               </DialogHeader>
               
@@ -184,12 +223,9 @@ const TimeSlotsPage: React.FC = () => {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => {
-                      alert('This is a demo feature. Custom time slots are not currently supported.');
-                      setIsCustomDialogOpen(false);
-                    }}
+                    onClick={handleAddCustomTimeSlot}
                   >
-                    Add Custom Slot
+                    Add Time Slot
                   </Button>
                 </DialogFooter>
               </div>
@@ -203,6 +239,11 @@ const TimeSlotsPage: React.FC = () => {
               </button>
             </DialogContent>
           </Dialog>
+
+          <Button variant="destructive" onClick={handleClearAllTimeSlots}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Clear All Time Slots
+          </Button>
         </div>
       </PageHeader>
       
@@ -214,7 +255,7 @@ const TimeSlotsPage: React.FC = () => {
             <div className="flex flex-col items-center justify-center space-y-3 py-6">
               <Clock className="h-12 w-12 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">
-                No time slots found. This should not happen.
+                No time slots found. Add custom time slots using the button above.
               </p>
             </div>
           }
@@ -224,32 +265,9 @@ const TimeSlotsPage: React.FC = () => {
           <div className="bg-secondary/30 glass-effect rounded-lg p-6 space-y-4">
             <h3 className="text-xl font-medium">About Time Slots</h3>
             <p className="text-muted-foreground">
-              Time slots are pre-defined periods during which classes can be scheduled. 
-              Our system uses a standardized set of time slots to ensure consistency across 
-              all schedules.
+              Time slots define when classes can be scheduled. You can create custom time slots
+              based on your institution's schedule.
             </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">Available Days</h4>
-                <ul className="space-y-1">
-                  {DAYS.map((day) => (
-                    <li key={day} className="text-muted-foreground">• {day}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Time Periods</h4>
-                <ul className="space-y-1">
-                  {TIME_SLOTS.map((slot, index) => (
-                    <li key={index} className="text-muted-foreground">
-                      • {slot.start} - {slot.end}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
             
             <div className="border-t border-border pt-4 mt-4">
               <h4 className="font-medium mb-2">Weekly Scheduling</h4>

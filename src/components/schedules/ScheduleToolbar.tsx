@@ -23,7 +23,7 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       try {
         setDbStatus('checking');
         // Check if we can connect to Supabase by making a simple query
-        const { error } = await supabase.from('instructors').select('id').limit(1);
+        const { error } = await supabase.from('time_slots').select('id').limit(1);
         
         if (error) {
           console.error('Failed to connect to Supabase:', error);
