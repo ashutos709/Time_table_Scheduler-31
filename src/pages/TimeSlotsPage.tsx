@@ -5,7 +5,7 @@ import { TimeSlot } from '@/types';
 import { useScheduler } from '@/context/SchedulerContext';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,8 +13,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DAYS } from '@/types';
+import { Column } from '@/components/ui/DataTable';
 
-const columns = [
+// Correctly typed columns for the DataTable component
+const columns: Column<TimeSlot & { deleteHandler: () => void }>[] = [
   {
     header: 'Day',
     accessorKey: 'day',
@@ -31,8 +33,6 @@ const columns = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
-      const timeSlot = row;
-      
       return (
         <Button variant="destructive" size="sm" onClick={() => row.deleteHandler()}>
           <Trash className="h-4 w-4 mr-2" />
@@ -49,9 +49,11 @@ const timeSlotSchema = z.object({
   endTime: z.string().min(1, 'End time is required'),
 });
 
+type TimeSlotFormValues = z.infer<typeof timeSlotSchema>;
+
 function TimeSlotDialog({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
   const { addTimeSlot } = useScheduler();
-  const form = useForm<z.infer<typeof timeSlotSchema>>({
+  const form = useForm<TimeSlotFormValues>({
     resolver: zodResolver(timeSlotSchema),
     defaultValues: {
       day: 'Monday',
@@ -60,8 +62,15 @@ function TimeSlotDialog({ open, setOpen }: { open: boolean; setOpen: (open: bool
     }
   });
 
-  const onSubmit = (values: z.infer<typeof timeSlotSchema>) => {
-    addTimeSlot(values);
+  const onSubmit = (values: TimeSlotFormValues) => {
+    // Explicitly ensuring all required fields are present
+    const timeSlotData: Omit<TimeSlot, 'id'> = {
+      day: values.day,
+      startTime: values.startTime,
+      endTime: values.endTime
+    };
+    
+    addTimeSlot(timeSlotData);
     form.reset();
     setOpen(false);
   };
@@ -71,6 +80,7 @@ function TimeSlotDialog({ open, setOpen }: { open: boolean; setOpen: (open: bool
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Time Slot</DialogTitle>
+          <DialogDescription>Create a new time slot for scheduling classes.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
