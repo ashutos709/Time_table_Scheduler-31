@@ -64,6 +64,22 @@ const sectionFromDb = (dbSection: any): Section => ({
   departmentId: dbSection.department_id
 });
 
+const instructorToDb = (instructor: Instructor) => ({
+  id: instructor.id,
+  name: instructor.name,
+  designation: instructor.designation,
+  max_hours: instructor.maxHours,
+  current_hours: instructor.currentHours || 0
+});
+
+const instructorFromDb = (dbInstructor: any): Instructor => ({
+  id: dbInstructor.id,
+  name: dbInstructor.name,
+  designation: dbInstructor.designation,
+  maxHours: dbInstructor.max_hours,
+  currentHours: dbInstructor.current_hours || 0
+});
+
 export const tableMapping: {
   instructors: TableConfig<Instructor>;
   courses: TableConfig<Course>;
@@ -74,7 +90,9 @@ export const tableMapping: {
   timeSlots: TableConfig<TimeSlot>;
 } = {
   instructors: { 
-    table: 'instructors'
+    table: 'instructors',
+    transform: instructorToDb,
+    fromDb: instructorFromDb
   },
   courses: { 
     table: 'courses'

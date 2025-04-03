@@ -21,9 +21,15 @@ export const createInstructorOperations = (
   };
   
   const updateInstructor = (updatedInstructor: Instructor) => {
+    // Ensure the instructor has the currentHours property
+    const instructorToUpdate = {
+      ...updatedInstructor,
+      currentHours: updatedInstructor.currentHours || 0
+    };
+    
     setInstructors(prev => 
       prev.map(instructor => 
-        instructor.id === updatedInstructor.id ? updatedInstructor : instructor
+        instructor.id === instructorToUpdate.id ? instructorToUpdate : instructor
       )
     );
     toast.success(`Instructor ${updatedInstructor.name} updated successfully`);

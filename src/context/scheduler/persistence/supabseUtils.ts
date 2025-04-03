@@ -28,15 +28,32 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
           mapping.transform ? mapping.transform(item as any) : item
         );
       } else {
-        transformedData = data;
+        // Handle specific table cases
+        if (tableKey === 'instructors') {
+          // Format instructor data to match Supabase schema
+          transformedData = data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            designation: item.designation,
+            max_hours: item.maxHours,
+            current_hours: item.currentHours || 0
+          }));
+        } else {
+          transformedData = data;
+        }
       }
+      
+      console.log(`Saving to ${table}:`, transformedData);
       
       // Use type assertion to bypass type checking
       const { error: insertError } = await supabase
         .from(table)
         .insert(transformedData as any);
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error(`Insert error for table ${table}:`, insertError);
+        throw insertError;
+      }
     }
     
     return true;
@@ -60,6 +77,17 @@ export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): 
     // Transform data if needed using the fromDb function
     if (data && fromDb) {
       return data.map(item => fromDb(item)) as unknown as T[];
+    }
+    
+    // Handle specific table cases for return transformation
+    if (tableKey === 'instructors' && data) {
+      return data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        designation: item.designation,
+        maxHours: item.max_hours,
+        currentHours: item.current_hours || 0
+      })) as unknown as T[];
     }
     
     return data as unknown as T[] || [];

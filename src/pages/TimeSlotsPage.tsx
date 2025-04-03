@@ -1,185 +1,258 @@
-import React from 'react';
-import DataTable from '@/components/ui/DataTable';
-import { TimeSlot } from '@/types';
+
+// Fix the TypeScript error by correctly accessing the properties
+import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
+import PageHeader from '@/components/ui/PageHeader';
+import DataTable from '@/components/ui/DataTable';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DAYS } from '@/types';
-import { Column } from '@/components/ui/DataTable';
+import { Label } from '@/components/ui/label';
+import { Trash2, Plus, Clock, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { TimeSlot, Day, DAYS } from '@/context/scheduler/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-// Define the column type for TypeScript
-type TimeSlotWithDelete = TimeSlot & { deleteHandler: () => void };
+// Type for data with delete action
+interface TimeSlotWithDelete extends TimeSlot {
+  deleteAction: JSX.Element;
+}
 
-// Correctly typed columns for the DataTable component
-const columns: Column<TimeSlotWithDelete>[] = [
-  {
-    header: 'Day',
-    accessorKey: 'day',
-  },
-  {
-    header: 'Start Time',
-    accessorKey: 'startTime',
-  },
-  {
-    header: 'End Time',
-    accessorKey: 'endTime',
-  },
-  {
-    header: 'Actions',
-    cell: ({ row }) => {
-      const timeSlot = row.original;
-      return (
-        <Button variant="destructive" size="sm" onClick={() => timeSlot.deleteHandler()}>
-          <Trash className="h-4 w-4 mr-2" />
-          Delete
-        </Button>
-      );
-    },
-  }
-];
-
-const timeSlotSchema = z.object({
-  day: z.string().min(1, 'Day is required'),
-  startTime: z.string().min(1, 'Start time is required'),
-  endTime: z.string().min(1, 'End time is required'),
-});
-
-type TimeSlotFormValues = z.infer<typeof timeSlotSchema>;
-
-function TimeSlotDialog({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
-  const { addTimeSlot } = useScheduler();
-  const form = useForm<TimeSlotFormValues>({
-    resolver: zodResolver(timeSlotSchema),
-    defaultValues: {
-      day: 'Monday',
-      startTime: '09:00',
-      endTime: '10:00'
-    }
+const TimeSlotsPage: React.FC = () => {
+  const { timeSlots, addTimeSlot, deleteTimeSlot, clearTimeSlots } = useScheduler();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    day: 'Monday' as Day,
+    startTime: '08:00',
+    endTime: '09:00',
   });
 
-  const onSubmit = (values: TimeSlotFormValues) => {
-    const timeSlotData: Omit<TimeSlot, 'id'> = {
-      day: values.day,
-      startTime: values.startTime,
-      endTime: values.endTime
-    };
-    
-    addTimeSlot(timeSlotData);
-    form.reset();
-    setOpen(false);
+  // Format the data for the table
+  const tableData: TimeSlotWithDelete[] = timeSlots.map((slot) => ({
+    ...slot,
+    deleteAction: (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive/90"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Time Slot</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this time slot.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTimeSlot(slot.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    ),
+  }));
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addTimeSlot({
+      day: formData.day,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+    });
+    setIsAddDialogOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFormData({
+      day: 'Monday',
+      startTime: '08:00',
+      endTime: '09:00',
+    });
+  };
+
+  const columns = [
+    {
+      header: 'Day',
+      accessorKey: 'day',
+    },
+    {
+      header: 'Start Time',
+      accessorKey: 'startTime',
+    },
+    {
+      header: 'End Time',
+      accessorKey: 'endTime',
+    },
+    {
+      header: 'Actions',
+      cell: (timeSlot: TimeSlotWithDelete) => timeSlot.deleteAction,
+    },
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Time Slot</DialogTitle>
-          <DialogDescription>Create a new time slot for scheduling classes.</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="day"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Day</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a day" />
-                      </SelectTrigger>
-                    </FormControl>
+    <div className="space-y-6">
+      <PageHeader
+        title="Time Slots"
+        description="Manage time slots for the schedule."
+      >
+        <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear All
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear All Time Slots</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete all time slots. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={clearTimeSlots}
+                >
+                  Clear All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Time Slot
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Time Slot</DialogTitle>
+                <DialogDescription>
+                  Add a new time slot for scheduling classes.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="day">Day</Label>
+                  <Select
+                    value={formData.day}
+                    onValueChange={(value) => handleInputChange('day', value)}
+                  >
+                    <SelectTrigger id="day">
+                      <SelectValue placeholder="Select a day" />
+                    </SelectTrigger>
                     <SelectContent>
                       {DAYS.map((day) => (
-                        <SelectItem key={day} value={day}>{day}</SelectItem>
+                        <SelectItem key={day} value={day}>
+                          {day}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="startTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </div>
 
-            <FormField
-              control={form.control}
-              name="endTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  />
+                </div>
 
-            <DialogFooter>
-              <Button type="submit">Save</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  />
+                </div>
 
-const TimeSlotsPage = () => {
-  const { timeSlots, deleteTimeSlot, clearTimeSlots } = useScheduler();
-  const [open, setOpen] = React.useState(false);
-  
-  const handleClear = () => {
-    clearTimeSlots();
-  };
-  
-  const tableData: TimeSlotWithDelete[] = timeSlots.map(timeSlot => ({
-    ...timeSlot,
-    deleteHandler: () => deleteTimeSlot(timeSlot.id),
-  }));
-  
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Time Slots</h1>
-        <div>
-          <Button variant="destructive" onClick={handleClear} className="mr-2">
-            <Trash className="h-4 w-4 mr-2" />
-            Clear All
-          </Button>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Time Slot
-          </Button>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Add Time Slot</Button>
+                </DialogFooter>
+              </form>
+
+              <button
+                onClick={() => setIsAddDialogOpen(false)}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </DialogContent>
+          </Dialog>
         </div>
-      </div>
-      <DataTable 
-        columns={columns} 
-        data={tableData} 
-        emptyState={<div>No time slots added yet. Click "Add Time Slot" to create one.</div>}
+      </PageHeader>
+
+      <DataTable
+        data={tableData}
+        columns={columns}
+        emptyState={
+          <div className="flex flex-col items-center justify-center space-y-3 py-6">
+            <Clock className="h-12 w-12 text-muted-foreground/50" />
+            <p className="text-lg font-medium">No time slots found</p>
+            <p className="text-sm text-muted-foreground">
+              Add time slots to start creating schedules.
+            </p>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Time Slot
+            </Button>
+          </div>
+        }
       />
-      <TimeSlotDialog open={open} setOpen={setOpen} />
     </div>
   );
 };
