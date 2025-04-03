@@ -17,7 +17,7 @@ export const createCourseOperations = (
     };
     
     try {
-      // Add to Supabase with type assertion
+      // Add to Supabase with correct column mapping
       const { error } = await supabase
         .from('courses')
         .insert({
@@ -26,23 +26,25 @@ export const createCourseOperations = (
           name: newCourse.name,
           max_students: newCourse.maxStudents,
           instructor_id: newCourse.instructorId
-        } as any);
+        });
       
       if (error) throw error;
       
       setCourses(prev => [...prev, newCourse]);
       toast.success(`Course ${courseData.name} added successfully`);
+      return newCourse; // Return the new course for potential use by caller
     } catch (error) {
       console.error('Error saving course to Supabase:', error);
       // Still add it to local state
       setCourses(prev => [...prev, newCourse]);
       toast.warning(`Course ${courseData.name} added to local state only. Error: ${(error as Error).message}`);
+      return newCourse; // Return even on error for consistency
     }
   };
   
   const updateCourse = async (updatedCourse: Course) => {
     try {
-      // Update in Supabase with type assertion
+      // Update in Supabase with correct column mapping
       const { error } = await supabase
         .from('courses')
         .update({
@@ -50,7 +52,7 @@ export const createCourseOperations = (
           name: updatedCourse.name,
           max_students: updatedCourse.maxStudents,
           instructor_id: updatedCourse.instructorId
-        } as any)
+        })
         .eq('id', updatedCourse.id);
       
       if (error) throw error;
@@ -81,7 +83,7 @@ export const createCourseOperations = (
     }
     
     try {
-      // Delete from Supabase with type assertion
+      // Delete from Supabase
       const { error } = await supabase
         .from('courses')
         .delete()

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
 import DataTable, { Column } from '@/components/ui/DataTable';
@@ -40,7 +41,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Department } from '@/types';
+import { Department, Course } from '@/types';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -57,12 +58,19 @@ const DepartmentsPage: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   
   const [formData, setFormData] = useState({
     id: '',
     name: '',
     courses: [] as string[],
   });
+  
+  // Update available courses when main course list changes
+  useEffect(() => {
+    setAvailableCourses(courses);
+  }, [courses]);
   
   const resetForm = () => {
     setFormData({
@@ -71,6 +79,7 @@ const DepartmentsPage: React.FC = () => {
       courses: [],
     });
     setEditingDepartment(null);
+    setSearchQuery('');
   };
   
   const handleOpenEditDialog = (department: Department) => {
@@ -130,10 +139,23 @@ const DepartmentsPage: React.FC = () => {
     handleCloseDialog();
   };
   
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+  
+  // Filter courses based on search query
+  const filteredCourses = searchQuery
+    ? courses.filter(
+        course => 
+          course.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          course.code.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : courses;
+  
   const columns: Column<Department>[] = [
     {
       header: 'Department Name',
-      accessorKey: 'name' as keyof Department,
+      accessorKey: 'name'
     },
     {
       header: 'Courses',
@@ -248,6 +270,7 @@ const DepartmentsPage: React.FC = () => {
                       role="combobox"
                       aria-expanded={isCoursesOpen}
                       className="w-full justify-between"
+                      type="button"
                     >
                       {formData.courses.length > 0
                         ? `${formData.courses.length} course${formData.courses.length > 1 ? 's' : ''} selected`
@@ -257,27 +280,43 @@ const DepartmentsPage: React.FC = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-[300px] p-0">
                     <Command>
-                      <CommandInput placeholder="Search courses..." />
+                      <CommandInput 
+                        placeholder="Search courses..." 
+                        onValueChange={handleSearchChange}
+                        value={searchQuery}
+                        className="h-9"
+                      />
                       <CommandList>
                         <CommandEmpty>No courses found.</CommandEmpty>
                         <CommandGroup>
-                          {courses.map((course) => (
-                            <CommandItem
-                              key={course.id}
-                              value={course.id}
-                              onSelect={() => handleCourseToggle(course.id)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.courses.includes(course.id)
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {course.code}: {course.name}
-                            </CommandItem>
-                          ))}
+                          {filteredCourses.length > 0 ? (
+                            filteredCourses.map((course) => (
+                              <CommandItem
+                                key={course.id}
+                                value={course.id}
+                                onSelect={() => {
+                                  handleCourseToggle(course.id);
+                                  // Don't close popover so user can select multiple
+                                }}
+                              >
+                                <div className="flex items-center">
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.courses.includes(course.id)
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <span>{course.code}: {course.name}</span>
+                                </div>
+                              </CommandItem>
+                            ))
+                          ) : (
+                            <div className="py-6 text-center text-sm">
+                              No courses available to select
+                            </div>
+                          )}
                         </CommandGroup>
                       </CommandList>
                     </Command>
@@ -300,6 +339,7 @@ const DepartmentsPage: React.FC = () => {
                             size="icon"
                             className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
                             onClick={() => handleCourseToggle(courseId)}
+                            type="button"
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -323,6 +363,7 @@ const DepartmentsPage: React.FC = () => {
             <button
               onClick={handleCloseDialog}
               className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              type="button"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>

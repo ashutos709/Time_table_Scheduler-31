@@ -17,36 +17,38 @@ export const createDepartmentOperations = (
     };
     
     try {
-      // Add to Supabase with type assertion
+      // Add to Supabase with properly mapped fields
       const { error } = await supabase
         .from('departments')
         .insert({
           id: newDepartment.id,
           name: newDepartment.name,
           courses: newDepartment.courses
-        } as any);
+        });
       
       if (error) throw error;
       
       setDepartments(prev => [...prev, newDepartment]);
       toast.success(`Department ${departmentData.name} added successfully`);
+      return newDepartment;
     } catch (error) {
       console.error('Error saving department to Supabase:', error);
       // Still add to local state
       setDepartments(prev => [...prev, newDepartment]);
       toast.warning(`Department ${departmentData.name} added to local state only`);
+      return newDepartment;
     }
   };
   
   const updateDepartment = async (updatedDepartment: Department) => {
     try {
-      // Update in Supabase with type assertion
+      // Update in Supabase with properly mapped fields
       const { error } = await supabase
         .from('departments')
         .update({
           name: updatedDepartment.name,
           courses: updatedDepartment.courses
-        } as any)
+        })
         .eq('id', updatedDepartment.id);
       
       if (error) throw error;
@@ -77,7 +79,7 @@ export const createDepartmentOperations = (
     }
     
     try {
-      // Delete from Supabase with type assertion
+      // Delete from Supabase
       const { error } = await supabase
         .from('departments')
         .delete()
