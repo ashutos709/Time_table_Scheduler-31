@@ -20,13 +20,13 @@ export const createCourseOperations = (
       // Add to Supabase
       const { error } = await supabase
         .from('courses')
-        .insert([{
+        .insert({
           id: newCourse.id,
-          name: newCourse.name,
           code: newCourse.code,
-          instructor_id: newCourse.instructorId,
-          max_students: newCourse.maxStudents
-        }]);
+          name: newCourse.name,
+          max_students: newCourse.maxStudents,
+          instructor_id: newCourse.instructorId
+        });
       
       if (error) throw error;
       
@@ -36,7 +36,7 @@ export const createCourseOperations = (
       console.error('Error saving course to Supabase:', error);
       // Still add it to local state
       setCourses(prev => [...prev, newCourse]);
-      toast.success(`Course ${courseData.name} added to local state only`);
+      toast.warning(`Course ${courseData.name} added to local state only. Error: ${(error as Error).message}`);
     }
   };
   
@@ -46,10 +46,10 @@ export const createCourseOperations = (
       const { error } = await supabase
         .from('courses')
         .update({
-          name: updatedCourse.name,
           code: updatedCourse.code,
-          instructor_id: updatedCourse.instructorId,
-          max_students: updatedCourse.maxStudents
+          name: updatedCourse.name,
+          max_students: updatedCourse.maxStudents,
+          instructor_id: updatedCourse.instructorId
         })
         .eq('id', updatedCourse.id);
       
@@ -69,7 +69,7 @@ export const createCourseOperations = (
           course.id === updatedCourse.id ? updatedCourse : course
         )
       );
-      toast.success(`Course ${updatedCourse.name} updated in local state only`);
+      toast.warning(`Course ${updatedCourse.name} updated in local state only. Error: ${(error as Error).message}`);
     }
   };
   
@@ -95,7 +95,7 @@ export const createCourseOperations = (
       console.error('Error deleting course from Supabase:', error);
       // Still delete from local state
       setCourses(prev => prev.filter(course => course.id !== id));
-      toast.success("Course deleted from local state only");
+      toast.warning(`Course deleted from local state only. Error: ${(error as Error).message}`);
     }
   };
 

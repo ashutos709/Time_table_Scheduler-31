@@ -15,8 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DAYS } from '@/types';
 import { Column } from '@/components/ui/DataTable';
 
+// Define the column type for TypeScript
+type TimeSlotWithDelete = TimeSlot & { deleteHandler: () => void };
+
 // Correctly typed columns for the DataTable component
-const columns: Column<TimeSlot & { deleteHandler: () => void }>[] = [
+const columns: Column<TimeSlotWithDelete>[] = [
   {
     header: 'Day',
     accessorKey: 'day',
@@ -33,8 +36,9 @@ const columns: Column<TimeSlot & { deleteHandler: () => void }>[] = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
+      const timeSlot = row.original;
       return (
-        <Button variant="destructive" size="sm" onClick={() => row.deleteHandler()}>
+        <Button variant="destructive" size="sm" onClick={() => timeSlot.deleteHandler()}>
           <Trash className="h-4 w-4 mr-2" />
           Delete
         </Button>
@@ -154,7 +158,7 @@ const TimeSlotsPage = () => {
   };
   
   // Prepare data for the DataTable with the delete handler attached
-  const tableData = timeSlots.map(timeSlot => ({
+  const tableData: TimeSlotWithDelete[] = timeSlots.map(timeSlot => ({
     ...timeSlot,
     deleteHandler: () => deleteTimeSlot(timeSlot.id),
   }));

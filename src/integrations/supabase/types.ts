@@ -9,7 +9,208 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      courses: {
+        Row: {
+          code: string
+          id: string
+          instructor_id: string
+          max_students: number
+          name: string
+        }
+        Insert: {
+          code: string
+          id: string
+          instructor_id: string
+          max_students: number
+          name: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          instructor_id?: string
+          max_students?: number
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          courses: string[] | null
+          id: string
+          name: string
+        }
+        Insert: {
+          courses?: string[] | null
+          id: string
+          name: string
+        }
+        Update: {
+          courses?: string[] | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      instructors: {
+        Row: {
+          current_hours: number | null
+          designation: string
+          id: string
+          max_hours: number
+          name: string
+        }
+        Insert: {
+          current_hours?: number | null
+          designation: string
+          id: string
+          max_hours: number
+          name: string
+        }
+        Update: {
+          current_hours?: number | null
+          designation?: string
+          id?: string
+          max_hours?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          capacity: number
+          id: string
+          number: string
+        }
+        Insert: {
+          capacity: number
+          id: string
+          number: string
+        }
+        Update: {
+          capacity?: number
+          id?: string
+          number?: string
+        }
+        Relationships: []
+      }
+      schedules: {
+        Row: {
+          course_id: string
+          id: string
+          instructor_id: string
+          room_id: string
+          section_id: string
+          time_slot_id: string
+        }
+        Insert: {
+          course_id: string
+          id: string
+          instructor_id: string
+          room_id: string
+          section_id: string
+          time_slot_id: string
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          instructor_id?: string
+          room_id?: string
+          section_id?: string
+          time_slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_time_slot_id_fkey"
+            columns: ["time_slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sections: {
+        Row: {
+          department_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          department_id: string
+          id: string
+          name: string
+        }
+        Update: {
+          department_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_slots: {
+        Row: {
+          day: string
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          day: string
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Update: {
+          day?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -31,6 +31,7 @@ const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           toast.error('Supabase connection failed');
         } else {
           setDbStatus('connected');
+          toast.success('Connected to Supabase database');
         }
       } catch (error) {
         console.error('Failed to connect to Supabase:', error);

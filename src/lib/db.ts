@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// This file replaces the old mongodb.ts file with Supabase functionality
+// Connect to Supabase and check connection status
 const connectDB = async () => {
   try {
     // Check if we can connect to Supabase by making a simple query
