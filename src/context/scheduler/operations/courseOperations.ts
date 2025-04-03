@@ -17,7 +17,7 @@ export const createCourseOperations = (
     };
     
     try {
-      // Add to Supabase
+      // Add to Supabase with type assertion
       const { error } = await supabase
         .from('courses')
         .insert({
@@ -26,7 +26,7 @@ export const createCourseOperations = (
           name: newCourse.name,
           max_students: newCourse.maxStudents,
           instructor_id: newCourse.instructorId
-        });
+        } as any);
       
       if (error) throw error;
       
@@ -42,7 +42,7 @@ export const createCourseOperations = (
   
   const updateCourse = async (updatedCourse: Course) => {
     try {
-      // Update in Supabase
+      // Update in Supabase with type assertion
       const { error } = await supabase
         .from('courses')
         .update({
@@ -50,7 +50,7 @@ export const createCourseOperations = (
           name: updatedCourse.name,
           max_students: updatedCourse.maxStudents,
           instructor_id: updatedCourse.instructorId
-        })
+        } as any)
         .eq('id', updatedCourse.id);
       
       if (error) throw error;
@@ -81,7 +81,7 @@ export const createCourseOperations = (
     }
     
     try {
-      // Delete from Supabase
+      // Delete from Supabase with type assertion
       const { error } = await supabase
         .from('courses')
         .delete()

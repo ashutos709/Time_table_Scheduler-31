@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DataTable from '@/components/ui/DataTable';
 import { TimeSlot } from '@/types';
@@ -33,7 +32,6 @@ const columns: Column<TimeSlotWithDelete>[] = [
     accessorKey: 'endTime',
   },
   {
-    id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
       const timeSlot = row.original;
@@ -67,7 +65,6 @@ function TimeSlotDialog({ open, setOpen }: { open: boolean; setOpen: (open: bool
   });
 
   const onSubmit = (values: TimeSlotFormValues) => {
-    // Explicitly ensuring all required fields are present
     const timeSlotData: Omit<TimeSlot, 'id'> = {
       day: values.day,
       startTime: values.startTime,
@@ -157,7 +154,6 @@ const TimeSlotsPage = () => {
     clearTimeSlots();
   };
   
-  // Prepare data for the DataTable with the delete handler attached
   const tableData: TimeSlotWithDelete[] = timeSlots.map(timeSlot => ({
     ...timeSlot,
     deleteHandler: () => deleteTimeSlot(timeSlot.id),

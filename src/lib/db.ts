@@ -6,7 +6,10 @@ import { toast } from 'sonner';
 const connectDB = async () => {
   try {
     // Check if we can connect to Supabase by making a simple query
-    const { error } = await supabase.from('time_slots').select('id').limit(1);
+    const { error } = await supabase
+      .from('time_slots')
+      .select('id')
+      .limit(1);
     
     if (error) {
       console.error('Supabase connection error:', error);

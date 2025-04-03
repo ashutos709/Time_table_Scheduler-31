@@ -17,14 +17,14 @@ export const createDepartmentOperations = (
     };
     
     try {
-      // Add to Supabase
+      // Add to Supabase with type assertion
       const { error } = await supabase
         .from('departments')
-        .insert([{
+        .insert({
           id: newDepartment.id,
           name: newDepartment.name,
           courses: newDepartment.courses
-        }]);
+        } as any);
       
       if (error) throw error;
       
@@ -40,13 +40,13 @@ export const createDepartmentOperations = (
   
   const updateDepartment = async (updatedDepartment: Department) => {
     try {
-      // Update in Supabase
+      // Update in Supabase with type assertion
       const { error } = await supabase
         .from('departments')
         .update({
           name: updatedDepartment.name,
           courses: updatedDepartment.courses
-        })
+        } as any)
         .eq('id', updatedDepartment.id);
       
       if (error) throw error;
@@ -77,7 +77,7 @@ export const createDepartmentOperations = (
     }
     
     try {
-      // Delete from Supabase
+      // Delete from Supabase with type assertion
       const { error } = await supabase
         .from('departments')
         .delete()

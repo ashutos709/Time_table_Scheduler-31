@@ -3,21 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { tableMapping, TableConfig } from './types';
 import { TimeSlot, Instructor, Course, Room, Department, Section, Schedule } from '../types';
 
-// Transform functions to convert between app models and database schema
-const transformTimeSlotToDb = (slot: TimeSlot) => ({
-  id: slot.id,
-  day: slot.day,
-  start_time: slot.startTime,
-  end_time: slot.endTime
-});
-
-const transformTimeSlotFromDb = (dbSlot: any): TimeSlot => ({
-  id: dbSlot.id,
-  day: dbSlot.day,
-  startTime: dbSlot.start_time,
-  endTime: dbSlot.end_time
-});
-
 // Save data to Supabase with proper type mapping
 export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, data: T[]): Promise<boolean> => {
   try {
@@ -46,7 +31,7 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
         transformedData = data;
       }
       
-      // Cast transformedData to any to bypass strict type checking
+      // Use type assertion to bypass type checking
       const { error: insertError } = await supabase
         .from(table)
         .insert(transformedData as any);
@@ -74,10 +59,10 @@ export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): 
     
     // Transform data if needed using the fromDb function
     if (data && fromDb) {
-      return data.map(fromDb) as unknown as T[];
+      return data.map(item => fromDb(item)) as unknown as T[];
     }
     
-    return data as T[] || [];
+    return data as unknown as T[] || [];
   } catch (error) {
     console.error(`Error loading from Supabase (${tableKey}):`, error);
     return [];
