@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { tableMapping, TableConfig } from './types';
 import { TimeSlot, Instructor, Course, Room, Department, Section, Schedule } from '../types';
 
-// Type-safe Supabase tables
+// Define mapping for entity types to their Supabase table names
+export type EntityType = 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'timeSlots';
 export type SupabaseTable = 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'time_slots';
 
 // Convert our key to Supabase table name
@@ -11,8 +12,14 @@ export const getSupabaseTableName = (tableKey: keyof typeof tableMapping): Supab
   return tableMapping[tableKey].table as SupabaseTable;
 };
 
+// Helper type to get the correct database schema type based on the table
+type DbEntityType<T extends keyof typeof tableMapping> = ReturnType<(typeof tableMapping)[T]['transform']>;
+
 // Save data to Supabase with proper type mapping
-export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, data: T[]): Promise<boolean> => {
+export const saveToSupabase = async <T extends keyof typeof tableMapping>(
+  tableKey: T, 
+  data: Array<Parameters<(typeof tableMapping)[T]['transform']>[0]>
+): Promise<boolean> => {
   try {
     const mapping = tableMapping[tableKey];
     const tableName = getSupabaseTableName(tableKey);
@@ -31,9 +38,7 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
     // Then insert new data if we have any
     if (data && data.length > 0) {
       // Transform data according to the database schema using the transform function
-      const transformedData = data.map(item => 
-        mapping.transform ? mapping.transform(item) : item
-      );
+      const transformedData = data.map(item => mapping.transform(item));
       
       console.log(`Saving to ${tableName}:`, transformedData);
       
@@ -55,7 +60,9 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
 };
 
 // Load data from Supabase with proper type mapping
-export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): Promise<T[]> => {
+export const loadFromSupabase = async <T extends keyof typeof tableMapping>(
+  tableKey: T
+): Promise<ReturnType<(typeof tableMapping)[T]['fromDb']>[]> => {
   try {
     const { table, fromDb } = tableMapping[tableKey];
     const tableName = getSupabaseTableName(tableKey);
@@ -69,12 +76,12 @@ export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): 
       throw error;
     }
     
-    // Transform data using the fromDb function if provided
+    // Transform data using the fromDb function
     if (data && fromDb) {
-      return data.map(item => fromDb(item)) as unknown as T[];
+      return data.map(item => fromDb(item));
     }
     
-    return data as unknown as T[] || [];
+    return [];
   } catch (error) {
     console.error(`Error loading from Supabase (${tableKey}):`, error);
     return [];

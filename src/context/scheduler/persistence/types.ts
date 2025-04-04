@@ -12,7 +12,7 @@ export interface StoredData {
   examplesAdded?: boolean;
 }
 
-// This defines how our frontend types map to Supabase database tables
+// Database mapping between our frontend types and Supabase tables
 export const tableMapping = {
   instructors: {
     table: 'instructors',
