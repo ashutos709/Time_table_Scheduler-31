@@ -3,11 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { tableMapping, TableConfig } from './types';
 import { TimeSlot, Instructor, Course, Room, Department, Section, Schedule } from '../types';
 
+// Type-safe Supabase tables
+type SupabaseTable = 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'time_slots';
+
+// Convert our key to Supabase table name
+const getSupabaseTableName = (tableKey: keyof typeof tableMapping): SupabaseTable => {
+  return tableMapping[tableKey].table as SupabaseTable;
+};
+
 // Save data to Supabase with proper type mapping
 export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, data: T[]): Promise<boolean> => {
   try {
     const mapping = tableMapping[tableKey];
-    const table = mapping.table;
+    const table = getSupabaseTableName(tableKey);
     
     // First delete all existing records
     const { error: deleteError } = await supabase
@@ -47,9 +55,10 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
 export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): Promise<T[]> => {
   try {
     const { table, fromDb } = tableMapping[tableKey];
+    const supabaseTable = getSupabaseTableName(tableKey);
     
     const { data, error } = await supabase
-      .from(table)
+      .from(supabaseTable)
       .select('*');
     
     if (error) throw error;
