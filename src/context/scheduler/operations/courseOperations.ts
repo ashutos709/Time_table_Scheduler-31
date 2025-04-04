@@ -17,6 +17,8 @@ export const createCourseOperations = (
     };
     
     try {
+      console.log('Attempting to save course to Supabase:', newCourse);
+      
       // Add to Supabase with correct column mapping
       const { error } = await supabase
         .from('courses')
@@ -28,7 +30,10 @@ export const createCourseOperations = (
           instructor_id: newCourse.instructorId
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error details:', error);
+        throw error;
+      }
       
       setCourses(prev => [...prev, newCourse]);
       toast.success(`Course ${courseData.name} added successfully`);
@@ -44,6 +49,8 @@ export const createCourseOperations = (
   
   const updateCourse = async (updatedCourse: Course) => {
     try {
+      console.log('Attempting to update course in Supabase:', updatedCourse);
+      
       // Update in Supabase with correct column mapping
       const { error } = await supabase
         .from('courses')
@@ -55,7 +62,10 @@ export const createCourseOperations = (
         })
         .eq('id', updatedCourse.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error details:', error);
+        throw error;
+      }
       
       setCourses(prev => 
         prev.map(course => 
@@ -83,13 +93,18 @@ export const createCourseOperations = (
     }
     
     try {
+      console.log('Attempting to delete course from Supabase:', id);
+      
       // Delete from Supabase
       const { error } = await supabase
         .from('courses')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error details:', error);
+        throw error;
+      }
       
       setCourses(prev => prev.filter(course => course.id !== id));
       toast.success("Course deleted successfully");

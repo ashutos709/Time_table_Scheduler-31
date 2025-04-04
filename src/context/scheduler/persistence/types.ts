@@ -9,113 +9,105 @@ export interface StoredData {
   sections: Section[];
   schedules: Schedule[];
   timeSlots: TimeSlot[];
-  examplesAdded: boolean;
+  examplesAdded?: boolean;
 }
 
-// Define proper table mappings with explicitly typed transforms
-export interface TableConfig<T> {
-  table: 'instructors' | 'courses' | 'rooms' | 'departments' | 'sections' | 'schedules' | 'time_slots';
-  transform?: (data: T) => any;
-  fromDb?: (dbData: any) => T;
+export interface TableConfig {
+  table: string;
+  transform?: (data: any) => any;
+  fromDb?: (data: any) => any;
 }
 
-// Transform functions for converting between app models and database schema
-const timeSlotToDb = (slot: TimeSlot) => ({
-  id: slot.id,
-  day: slot.day,
-  start_time: slot.startTime,
-  end_time: slot.endTime
-});
-
-const timeSlotFromDb = (dbSlot: any): TimeSlot => ({
-  id: dbSlot.id,
-  day: dbSlot.day,
-  startTime: dbSlot.start_time,
-  endTime: dbSlot.end_time
-});
-
-const scheduleToDb = (schedule: Schedule) => ({
-  id: schedule.id,
-  course_id: schedule.courseId,
-  instructor_id: schedule.instructorId,
-  room_id: schedule.roomId,
-  time_slot_id: schedule.timeSlotId,
-  section_id: schedule.sectionId
-});
-
-const scheduleFromDb = (dbSchedule: any): Schedule => ({
-  id: dbSchedule.id,
-  courseId: dbSchedule.course_id,
-  instructorId: dbSchedule.instructor_id,
-  roomId: dbSchedule.room_id,
-  timeSlotId: dbSchedule.time_slot_id,
-  sectionId: dbSchedule.section_id
-});
-
-const sectionToDb = (section: Section) => ({
-  id: section.id,
-  name: section.name,
-  department_id: section.departmentId
-});
-
-const sectionFromDb = (dbSection: any): Section => ({
-  id: dbSection.id,
-  name: dbSection.name,
-  departmentId: dbSection.department_id
-});
-
-const instructorToDb = (instructor: Instructor) => ({
-  id: instructor.id,
-  name: instructor.name,
-  designation: instructor.designation,
-  max_hours: instructor.maxHours,
-  current_hours: instructor.currentHours || 0
-});
-
-const instructorFromDb = (dbInstructor: any): Instructor => ({
-  id: dbInstructor.id,
-  name: dbInstructor.name,
-  designation: dbInstructor.designation,
-  maxHours: dbInstructor.max_hours,
-  currentHours: dbInstructor.current_hours || 0
-});
-
-export const tableMapping: {
-  instructors: TableConfig<Instructor>;
-  courses: TableConfig<Course>;
-  rooms: TableConfig<Room>;
-  departments: TableConfig<Department>;
-  sections: TableConfig<Section>;
-  schedules: TableConfig<Schedule>;
-  timeSlots: TableConfig<TimeSlot>;
-} = {
-  instructors: { 
+export const tableMapping: Record<string, TableConfig> = {
+  instructors: {
     table: 'instructors',
-    transform: instructorToDb,
-    fromDb: instructorFromDb
+    transform: (instructor: Instructor) => ({
+      id: instructor.id,
+      name: instructor.name,
+      designation: instructor.designation,
+      max_hours: instructor.maxHours,
+      current_hours: instructor.currentHours || 0
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      name: data.name,
+      designation: data.designation,
+      maxHours: data.max_hours,
+      currentHours: data.current_hours || 0
+    })
   },
-  courses: { 
-    table: 'courses'
+  courses: {
+    table: 'courses',
+    transform: (course: Course) => ({
+      id: course.id,
+      code: course.code,
+      name: course.name,
+      max_students: course.maxStudents,
+      instructor_id: course.instructorId
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      code: data.code,
+      name: data.name,
+      maxStudents: data.max_students,
+      instructorId: data.instructor_id
+    })
   },
-  rooms: { 
-    table: 'rooms'
+  rooms: {
+    table: 'rooms',
+    transform: (room: Room) => room,
+    fromDb: (data: any) => data
   },
-  departments: { 
-    table: 'departments'
+  departments: {
+    table: 'departments',
+    transform: (department: Department) => department,
+    fromDb: (data: any) => data
   },
-  sections: { 
+  sections: {
     table: 'sections',
-    transform: sectionToDb,
-    fromDb: sectionFromDb
+    transform: (section: Section) => ({
+      id: section.id,
+      name: section.name,
+      department_id: section.departmentId
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      name: data.name,
+      departmentId: data.department_id
+    })
   },
-  schedules: { 
+  schedules: {
     table: 'schedules',
-    transform: scheduleToDb,
-    fromDb: scheduleFromDb
+    transform: (schedule: Schedule) => ({
+      id: schedule.id,
+      course_id: schedule.courseId,
+      instructor_id: schedule.instructorId,
+      room_id: schedule.roomId,
+      time_slot_id: schedule.timeSlotId,
+      section_id: schedule.sectionId
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      courseId: data.course_id,
+      instructorId: data.instructor_id,
+      roomId: data.room_id,
+      timeSlotId: data.time_slot_id,
+      sectionId: data.section_id
+    })
   },
-  timeSlots: { 
+  timeSlots: {
     table: 'time_slots',
-    transform: timeSlotToDb,
-    fromDb: timeSlotFromDb
+    transform: (timeSlot: TimeSlot) => ({
+      id: timeSlot.id,
+      day: timeSlot.day,
+      start_time: timeSlot.startTime,
+      end_time: timeSlot.endTime
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      day: data.day,
+      startTime: data.start_time,
+      endTime: data.end_time
+    })
   }
 };
