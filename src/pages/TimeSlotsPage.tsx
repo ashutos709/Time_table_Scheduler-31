@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useScheduler } from '@/context/SchedulerContext';
 import PageHeader from '@/components/ui/PageHeader';
@@ -35,7 +34,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { TimeSlot, Day, DAYS } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 
 // Add this helper type for the table
 interface TimeSlotWithDelete extends TimeSlot {
@@ -80,8 +78,7 @@ const TimeSlotsPage: React.FC = () => {
     addTimeSlot({
       day: formData.day,
       startTime: formData.startTime,
-      endTime: formData.endTime,
-      id: uuidv4()
+      endTime: formData.endTime
     });
     
     setFormData({
@@ -115,13 +112,11 @@ const TimeSlotsPage: React.FC = () => {
     deleteTimeSlot(id);
   };
   
-  // The enhanced timeslots data with a delete handler attached
   const timeSlotData: TimeSlotWithDelete[] = timeSlots.map(slot => ({
     ...slot,
     onDelete: () => handleDeleteTimeSlot(slot.id)
   }));
   
-  // Fixed column definitions with proper typing
   const columns: Column<TimeSlotWithDelete>[] = [
     {
       header: 'Day',
