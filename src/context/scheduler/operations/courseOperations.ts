@@ -1,7 +1,7 @@
 
 import { Course } from '../types';
 import { toast } from 'sonner';
-import { saveToSupabase, loadFromSupabase } from '../persistence/supabseUtils';
+import { saveToSupabase, loadFromSupabase, EntityType } from '../persistence/supabseUtils';
 
 export const createCourseOperations = (
   courses: Course[],
@@ -73,7 +73,7 @@ export const createCourseOperations = (
       
       // Then try to update Supabase
       // We need to first get all courses, remove the one to delete, then save back
-      const allCourses = await loadFromSupabase<Course>('courses');
+      const allCourses = await loadFromSupabase('courses');
       const remainingCourses = allCourses.filter(course => course.id !== id);
       
       console.log('Saving remaining courses after deletion:', remainingCourses);

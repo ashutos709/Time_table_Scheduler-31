@@ -61,13 +61,13 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
       schedulesData,
       timeSlotsData
     ] = await Promise.all([
-      loadFromSupabase<Instructor>('instructors'),
-      loadFromSupabase<Course>('courses'),
-      loadFromSupabase<Room>('rooms'),
-      loadFromSupabase<Department>('departments'),
-      loadFromSupabase<Section>('sections'),
-      loadFromSupabase<Schedule>('schedules'),
-      loadFromSupabase<TimeSlot>('timeSlots')
+      loadFromSupabase('instructors'),
+      loadFromSupabase('courses'),
+      loadFromSupabase('rooms'),
+      loadFromSupabase('departments'),
+      loadFromSupabase('sections'),
+      loadFromSupabase('schedules'),
+      loadFromSupabase('timeSlots')
     ]);
     
     console.log("Supabase data loaded:", {
