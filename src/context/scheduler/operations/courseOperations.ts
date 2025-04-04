@@ -1,7 +1,7 @@
 
 import { Course } from '../types';
 import { toast } from 'sonner';
-import { saveToSupabase, loadFromSupabase, EntityType } from '../persistence/supabseUtils';
+import { saveToSupabase, loadFromSupabase } from '../persistence/supabseUtils';
 
 export const createCourseOperations = (
   courses: Course[],

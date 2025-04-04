@@ -2,7 +2,7 @@
 import { toast } from 'sonner';
 import { StoredData } from './types';
 import { saveToLocalStorage, loadFromLocalStorage } from './localStorage';
-import { saveToSupabase, loadFromSupabase } from './supabseUtils';
+import { saveToSupabase, loadFromSupabase, EntityType } from './supabseUtils';
 
 export const saveAllData = async (data: StoredData): Promise<void> => {
   try {

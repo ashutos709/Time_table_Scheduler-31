@@ -35,7 +35,7 @@ export const saveToSupabase = async <T extends EntityType>(
     // Then insert new data if we have any
     if (data && data.length > 0) {
       // Transform data according to the database schema using the transform function
-      const transformedData = data.map(item => mapping.transform(item));
+      const transformedData = data.map(item => mapping.transform(item as any));
       
       console.log(`Saving to ${tableName}:`, transformedData);
       
