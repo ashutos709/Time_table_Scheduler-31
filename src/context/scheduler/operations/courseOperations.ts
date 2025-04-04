@@ -1,7 +1,7 @@
 
 import { Course } from '../types';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { saveToSupabase, loadFromSupabase } from '../persistence/supabseUtils';
 
 export const createCourseOperations = (
   courses: Course[],
@@ -17,71 +17,46 @@ export const createCourseOperations = (
     };
     
     try {
-      console.log('Attempting to save course to Supabase:', newCourse);
+      console.log('Adding course to local state:', newCourse);
+      setCourses(prev => [...prev, newCourse]);
       
-      // Add to Supabase with correct column mapping
-      const { error } = await supabase
-        .from('courses')
-        .insert({
-          id: newCourse.id,
-          code: newCourse.code,
-          name: newCourse.name,
-          max_students: newCourse.maxStudents,
-          instructor_id: newCourse.instructorId || null // Handle null instructorId
-        });
+      console.log('Saving course to Supabase:', newCourse);
+      const success = await saveToSupabase('courses', [newCourse]);
       
-      if (error) {
-        console.error('Supabase insert error details:', error);
-        throw error;
+      if (success) {
+        toast.success(`Course ${courseData.name} added successfully`);
+      } else {
+        toast.error(`Error saving course to database`);
       }
       
-      setCourses(prev => [...prev, newCourse]);
-      toast.success(`Course ${courseData.name} added successfully`);
-      return newCourse; // Return the new course for potential use by caller
+      return newCourse;
     } catch (error) {
-      console.error('Error saving course to Supabase:', error);
-      // Still add it to local state
-      setCourses(prev => [...prev, newCourse]);
-      toast.warning(`Course ${courseData.name} added to local state only. Error: ${(error as Error).message}`);
-      return newCourse; // Return even on error for consistency
+      console.error('Error saving course:', error);
+      toast.error(`Failed to save course: ${(error as Error).message}`);
+      return newCourse;
     }
   };
   
   const updateCourse = async (updatedCourse: Course) => {
     try {
-      console.log('Attempting to update course in Supabase:', updatedCourse);
+      console.log('Updating course in local state:', updatedCourse);
+      setCourses(prev => 
+        prev.map(course => 
+          course.id === updatedCourse.id ? updatedCourse : course
+        )
+      );
       
-      // Update in Supabase with correct column mapping
-      const { error } = await supabase
-        .from('courses')
-        .update({
-          code: updatedCourse.code,
-          name: updatedCourse.name,
-          max_students: updatedCourse.maxStudents,
-          instructor_id: updatedCourse.instructorId || null // Handle null instructorId
-        })
-        .eq('id', updatedCourse.id);
+      console.log('Saving updated course to Supabase:', updatedCourse);
+      const success = await saveToSupabase('courses', [updatedCourse]);
       
-      if (error) {
-        console.error('Supabase update error details:', error);
-        throw error;
+      if (success) {
+        toast.success(`Course ${updatedCourse.name} updated successfully`);
+      } else {
+        toast.error(`Error updating course in database`);
       }
-      
-      setCourses(prev => 
-        prev.map(course => 
-          course.id === updatedCourse.id ? updatedCourse : course
-        )
-      );
-      toast.success(`Course ${updatedCourse.name} updated successfully`);
     } catch (error) {
-      console.error('Error updating course in Supabase:', error);
-      // Still update in local state
-      setCourses(prev => 
-        prev.map(course => 
-          course.id === updatedCourse.id ? updatedCourse : course
-        )
-      );
-      toast.warning(`Course ${updatedCourse.name} updated in local state only. Error: ${(error as Error).message}`);
+      console.error('Error updating course:', error);
+      toast.error(`Failed to update course: ${(error as Error).message}`);
     }
   };
   
@@ -93,26 +68,25 @@ export const createCourseOperations = (
     }
     
     try {
-      console.log('Attempting to delete course from Supabase:', id);
+      // First update local state
+      setCourses(prev => prev.filter(course => course.id !== id));
       
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('courses')
-        .delete()
-        .eq('id', id);
+      // Then try to update Supabase
+      // We need to first get all courses, remove the one to delete, then save back
+      const allCourses = await loadFromSupabase<Course>('courses');
+      const remainingCourses = allCourses.filter(course => course.id !== id);
       
-      if (error) {
-        console.error('Supabase delete error details:', error);
-        throw error;
+      console.log('Saving remaining courses after deletion:', remainingCourses);
+      const success = await saveToSupabase('courses', remainingCourses);
+      
+      if (success) {
+        toast.success("Course deleted successfully");
+      } else {
+        toast.error("Error deleting course from database");
       }
-      
-      setCourses(prev => prev.filter(course => course.id !== id));
-      toast.success("Course deleted successfully");
     } catch (error) {
-      console.error('Error deleting course from Supabase:', error);
-      // Still delete from local state
-      setCourses(prev => prev.filter(course => course.id !== id));
-      toast.warning(`Course deleted from local state only. Error: ${(error as Error).message}`);
+      console.error('Error deleting course:', error);
+      toast.error(`Failed to delete course: ${(error as Error).message}`);
     }
   };
 

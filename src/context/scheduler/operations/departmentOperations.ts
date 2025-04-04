@@ -1,7 +1,7 @@
 
 import { Department } from '../types';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { saveToSupabase } from '../persistence/supabseUtils';
 
 export const createDepartmentOperations = (
   departments: Department[],
@@ -13,32 +13,27 @@ export const createDepartmentOperations = (
   const addDepartment = async (departmentData: Omit<Department, 'id'>) => {
     const newDepartment: Department = {
       ...departmentData,
-      id: `department-${Date.now()}`
+      id: `department-${Date.now()}`,
+      courses: Array.isArray(departmentData.courses) ? departmentData.courses : []
     };
     
     try {
-      // Add to Supabase with properly mapped fields
-      const { error } = await supabase
-        .from('departments')
-        .insert({
-          id: newDepartment.id,
-          name: newDepartment.name,
-          courses: Array.isArray(newDepartment.courses) ? newDepartment.courses : []
-        });
+      // First update local state
+      setDepartments(prev => [...prev, newDepartment]);
       
-      if (error) {
-        console.error('Error adding department to Supabase:', error);
-        throw error;
+      // Then save to Supabase
+      const success = await saveToSupabase('departments', [newDepartment]);
+      
+      if (success) {
+        toast.success(`Department ${departmentData.name} added successfully`);
+      } else {
+        toast.error('Error saving department to database');
       }
       
-      setDepartments(prev => [...prev, newDepartment]);
-      toast.success(`Department ${departmentData.name} added successfully`);
       return newDepartment;
     } catch (error) {
-      console.error('Error saving department to Supabase:', error);
-      // Still add to local state
-      setDepartments(prev => [...prev, newDepartment]);
-      toast.warning(`Department ${departmentData.name} added to local state only. Error: ${(error as Error).message}`);
+      console.error('Error saving department:', error);
+      toast.error(`Failed to save department: ${(error as Error).message}`);
       return newDepartment;
     }
   };
@@ -46,39 +41,31 @@ export const createDepartmentOperations = (
   const updateDepartment = async (updatedDepartment: Department) => {
     try {
       // Ensure courses is an array
-      const coursesArray = Array.isArray(updatedDepartment.courses) ? updatedDepartment.courses : [];
+      const departmentToUpdate = {
+        ...updatedDepartment,
+        courses: Array.isArray(updatedDepartment.courses) ? updatedDepartment.courses : []
+      };
       
-      console.log('Updating department with courses:', coursesArray);
+      console.log('Updating department with courses:', departmentToUpdate.courses);
       
-      // Update in Supabase with properly mapped fields
-      const { error } = await supabase
-        .from('departments')
-        .update({
-          name: updatedDepartment.name,
-          courses: coursesArray
-        })
-        .eq('id', updatedDepartment.id);
+      // First update local state
+      setDepartments(prev => 
+        prev.map(department => 
+          department.id === departmentToUpdate.id ? departmentToUpdate : department
+        )
+      );
       
-      if (error) {
-        console.error('Error updating department in Supabase:', error);
-        throw error;
+      // Then save to Supabase
+      const success = await saveToSupabase('departments', [departmentToUpdate]);
+      
+      if (success) {
+        toast.success(`Department ${updatedDepartment.name} updated successfully`);
+      } else {
+        toast.error('Error updating department in database');
       }
-      
-      setDepartments(prev => 
-        prev.map(department => 
-          department.id === updatedDepartment.id ? updatedDepartment : department
-        )
-      );
-      toast.success(`Department ${updatedDepartment.name} updated successfully`);
     } catch (error) {
-      console.error('Error updating department in Supabase:', error);
-      // Still update local state
-      setDepartments(prev => 
-        prev.map(department => 
-          department.id === updatedDepartment.id ? updatedDepartment : department
-        )
-      );
-      toast.warning(`Department ${updatedDepartment.name} updated in local state only. Error: ${(error as Error).message}`);
+      console.error('Error updating department:', error);
+      toast.error(`Failed to update department: ${(error as Error).message}`);
     }
   };
   
@@ -90,24 +77,23 @@ export const createDepartmentOperations = (
     }
     
     try {
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('departments')
-        .delete()
-        .eq('id', id);
+      // First update local state
+      setDepartments(prev => prev.filter(department => department.id !== id));
       
-      if (error) {
-        console.error('Error deleting department from Supabase:', error);
-        throw error;
+      // Get all departments from local state, excluding the deleted one
+      const remainingDepartments = departments.filter(department => department.id !== id);
+      
+      // Then save to Supabase
+      const success = await saveToSupabase('departments', remainingDepartments);
+      
+      if (success) {
+        toast.success("Department deleted successfully");
+      } else {
+        toast.error("Error deleting department from database");
       }
-      
-      setDepartments(prev => prev.filter(department => department.id !== id));
-      toast.success("Department deleted successfully");
     } catch (error) {
-      console.error('Error deleting department from Supabase:', error);
-      // Still delete from local state
-      setDepartments(prev => prev.filter(department => department.id !== id));
-      toast.warning("Department deleted from local state only");
+      console.error('Error deleting department:', error);
+      toast.error(`Failed to delete department: ${(error as Error).message}`);
     }
   };
 
