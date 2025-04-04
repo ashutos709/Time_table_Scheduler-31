@@ -59,7 +59,7 @@ export const saveToSupabase = async <T extends EntityType>(
 // Load data from Supabase with proper type mapping
 export const loadFromSupabase = async <T extends EntityType>(
   tableKey: T
-): Promise<ReturnType<(typeof tableMapping)[T]['fromDb']>> => {
+): Promise<Array<ReturnType<(typeof tableMapping)[T]['fromDb']>>> => {
   try {
     const { table, fromDb } = tableMapping[tableKey];
     const tableName = getSupabaseTableName(tableKey);
@@ -75,12 +75,12 @@ export const loadFromSupabase = async <T extends EntityType>(
     
     // Transform data using the fromDb function
     if (data && fromDb) {
-      return data.map(item => fromDb(item)) as ReturnType<(typeof tableMapping)[T]['fromDb']>;
+      return data.map(item => fromDb(item)) as Array<ReturnType<(typeof tableMapping)[T]['fromDb']>>;
     }
     
-    return [] as unknown as ReturnType<(typeof tableMapping)[T]['fromDb']>;
+    return [] as Array<ReturnType<(typeof tableMapping)[T]['fromDb']>>;
   } catch (error) {
     console.error(`Error loading from Supabase (${tableKey}):`, error);
-    return [] as unknown as ReturnType<(typeof tableMapping)[T]['fromDb']>;
+    return [] as Array<ReturnType<(typeof tableMapping)[T]['fromDb']>>;
   }
 };
