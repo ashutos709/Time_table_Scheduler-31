@@ -59,7 +59,7 @@ const DepartmentsPage: React.FC = () => {
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -67,10 +67,19 @@ const DepartmentsPage: React.FC = () => {
     courses: [] as string[],
   });
   
-  // Update available courses when main course list changes
+  // Reset the course selection when the form is reset
   useEffect(() => {
-    setAvailableCourses(courses);
-  }, [courses]);
+    if (editingDepartment) {
+      setSelectedCourses(editingDepartment.courses || []);
+      setFormData({
+        id: editingDepartment.id,
+        name: editingDepartment.name,
+        courses: editingDepartment.courses || [],
+      });
+    } else {
+      setSelectedCourses([]);
+    }
+  }, [editingDepartment]);
   
   const resetForm = () => {
     setFormData({
@@ -80,14 +89,17 @@ const DepartmentsPage: React.FC = () => {
     });
     setEditingDepartment(null);
     setSearchQuery('');
+    setSelectedCourses([]);
   };
   
   const handleOpenEditDialog = (department: Department) => {
+    console.log("Editing department with courses:", department.courses);
     setEditingDepartment(department);
+    setSelectedCourses(department.courses || []);
     setFormData({
       id: department.id,
       name: department.name,
-      courses: [...department.courses],
+      courses: department.courses || [],
     });
   };
   
@@ -105,6 +117,14 @@ const DepartmentsPage: React.FC = () => {
   };
   
   const handleCourseToggle = (courseId: string) => {
+    setSelectedCourses(prev => {
+      if (prev.includes(courseId)) {
+        return prev.filter(id => id !== courseId);
+      } else {
+        return [...prev, courseId];
+      }
+    });
+    
     setFormData(prev => {
       const existingCourses = [...prev.courses];
       if (existingCourses.includes(courseId)) {
@@ -124,15 +144,23 @@ const DepartmentsPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Ensure courses array is properly set
+    const departmentToSave = {
+      ...formData,
+      courses: selectedCourses
+    };
+    
+    console.log("Submitting department with courses:", departmentToSave.courses);
+    
     if (editingDepartment) {
       updateDepartment({
-        ...formData,
+        ...departmentToSave,
         id: editingDepartment.id,
       });
     } else {
       addDepartment({
-        name: formData.name,
-        courses: formData.courses,
+        name: departmentToSave.name,
+        courses: departmentToSave.courses,
       });
     }
     
@@ -161,7 +189,7 @@ const DepartmentsPage: React.FC = () => {
       header: 'Courses',
       cell: (row: Department) => (
         <div className="flex flex-wrap gap-1">
-          {row.courses.length === 0 ? (
+          {!row.courses || row.courses.length === 0 ? (
             <span className="text-muted-foreground text-sm">No courses assigned</span>
           ) : (
             row.courses.map(courseId => {
@@ -272,8 +300,8 @@ const DepartmentsPage: React.FC = () => {
                       className="w-full justify-between"
                       type="button"
                     >
-                      {formData.courses.length > 0
-                        ? `${formData.courses.length} course${formData.courses.length > 1 ? 's' : ''} selected`
+                      {selectedCourses.length > 0
+                        ? `${selectedCourses.length} course${selectedCourses.length > 1 ? 's' : ''} selected`
                         : "Select courses"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -296,14 +324,13 @@ const DepartmentsPage: React.FC = () => {
                                 value={course.id}
                                 onSelect={() => {
                                   handleCourseToggle(course.id);
-                                  // Don't close popover so user can select multiple
                                 }}
                               >
-                                <div className="flex items-center">
+                                <div className="flex items-center w-full">
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      formData.courses.includes(course.id)
+                                      selectedCourses.includes(course.id)
                                         ? "opacity-100"
                                         : "opacity-0"
                                     )}
@@ -323,9 +350,9 @@ const DepartmentsPage: React.FC = () => {
                   </PopoverContent>
                 </Popover>
                 
-                {formData.courses.length > 0 && (
+                {selectedCourses.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1">
-                    {formData.courses.map(courseId => {
+                    {selectedCourses.map(courseId => {
                       const course = getCourseById(courseId);
                       return course ? (
                         <Badge 

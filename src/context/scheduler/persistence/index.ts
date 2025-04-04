@@ -6,7 +6,13 @@ import { saveToSupabase, loadFromSupabase } from './supabseUtils';
 
 export const saveAllData = async (data: StoredData): Promise<void> => {
   try {
-    // Try to save to Supabase
+    // First save to localStorage as a backup
+    Object.entries(data).forEach(([key, value]) => {
+      saveToLocalStorage(key, value);
+    });
+    
+    // Then try to save to Supabase
+    console.log("Saving data to Supabase:", data);
     const supabaseSaves = await Promise.all([
       saveToSupabase('instructors', data.instructors),
       saveToSupabase('courses', data.courses),
@@ -22,26 +28,30 @@ export const saveAllData = async (data: StoredData): Promise<void> => {
     if (allSupabaseSuccess) {
       toast.success('Data saved to Supabase');
     } else {
-      toast.error('Error saving data to Supabase');
+      toast.error('Error saving some data to Supabase');
     }
-    
-    // Always save to localStorage as a backup
-    Object.entries(data).forEach(([key, value]) => {
-      saveToLocalStorage(key, value);
-    });
   } catch (error) {
     console.error('Error saving data:', error);
     toast.error('Failed to save data to database, falling back to localStorage');
-    
-    Object.entries(data).forEach(([key, value]) => {
-      saveToLocalStorage(key, value);
-    });
   }
 };
 
 export const loadAllData = async (): Promise<Partial<StoredData>> => {
   try {
+    // First try to load from localStorage in case Supabase fails
+    const localData = {
+      instructors: loadFromLocalStorage<Instructor[]>('instructors') || [],
+      courses: loadFromLocalStorage<Course[]>('courses') || [],
+      rooms: loadFromLocalStorage<Room[]>('rooms') || [],
+      departments: loadFromLocalStorage<Department[]>('departments') || [],
+      sections: loadFromLocalStorage<Section[]>('sections') || [],
+      schedules: loadFromLocalStorage<Schedule[]>('schedules') || [],
+      timeSlots: loadFromLocalStorage<TimeSlot[]>('timeSlots') || [],
+      examplesAdded: loadFromLocalStorage<boolean>('examplesAdded') || false
+    };
+    
     // Try to load from Supabase
+    console.log("Loading data from Supabase");
     const [
       instructorsData,
       coursesData,
@@ -59,6 +69,12 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
       loadFromSupabase<Schedule>('schedules'),
       loadFromSupabase<TimeSlot>('timeSlots')
     ]);
+    
+    console.log("Supabase data loaded:", {
+      instructors: instructorsData,
+      courses: coursesData,
+      departments: departmentsData
+    });
     
     const hasSupabaseData = 
       instructorsData.length > 0 || 
@@ -83,17 +99,8 @@ export const loadAllData = async (): Promise<Partial<StoredData>> => {
       };
     }
     
-    toast.info('No data found in Supabase, loading from local storage');
-    return {
-      instructors: loadFromLocalStorage<Instructor[]>('instructors') || [],
-      courses: loadFromLocalStorage<Course[]>('courses') || [],
-      rooms: loadFromLocalStorage<Room[]>('rooms') || [],
-      departments: loadFromLocalStorage<Department[]>('departments') || [],
-      sections: loadFromLocalStorage<Section[]>('sections') || [],
-      schedules: loadFromLocalStorage<Schedule[]>('schedules') || [],
-      timeSlots: loadFromLocalStorage<TimeSlot[]>('timeSlots') || [],
-      examplesAdded: loadFromLocalStorage<boolean>('examplesAdded') || false
-    };
+    toast.info('No data found in Supabase, using local storage');
+    return localData;
   } catch (error) {
     console.error('Error loading data:', error);
     toast.error('Failed to load data from database, falling back to localStorage');

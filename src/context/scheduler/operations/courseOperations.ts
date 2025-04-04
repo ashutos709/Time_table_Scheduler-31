@@ -27,7 +27,7 @@ export const createCourseOperations = (
           code: newCourse.code,
           name: newCourse.name,
           max_students: newCourse.maxStudents,
-          instructor_id: newCourse.instructorId
+          instructor_id: newCourse.instructorId || null // Handle null instructorId
         });
       
       if (error) {
@@ -58,7 +58,7 @@ export const createCourseOperations = (
           code: updatedCourse.code,
           name: updatedCourse.name,
           max_students: updatedCourse.maxStudents,
-          instructor_id: updatedCourse.instructorId
+          instructor_id: updatedCourse.instructorId || null // Handle null instructorId
         })
         .eq('id', updatedCourse.id);
       
@@ -86,7 +86,7 @@ export const createCourseOperations = (
   };
   
   const deleteCourse = async (id: string) => {
-    const isUsed = departments.some(dept => dept.courses.includes(id));
+    const isUsed = departments.some(dept => dept.courses && dept.courses.includes(id));
     if (isUsed) {
       toast.error("Can't delete course as it's assigned to departments");
       return;

@@ -43,7 +43,7 @@ export const tableMapping: Record<string, TableConfig> = {
       code: course.code,
       name: course.name,
       max_students: course.maxStudents,
-      instructor_id: course.instructorId
+      instructor_id: course.instructorId || null // Handle null case
     }),
     fromDb: (data: any) => ({
       id: data.id,
@@ -60,8 +60,16 @@ export const tableMapping: Record<string, TableConfig> = {
   },
   departments: {
     table: 'departments',
-    transform: (department: Department) => department,
-    fromDb: (data: any) => data
+    transform: (department: Department) => ({
+      id: department.id,
+      name: department.name,
+      courses: department.courses || []
+    }),
+    fromDb: (data: any) => ({
+      id: data.id,
+      name: data.name,
+      courses: data.courses || []
+    })
   },
   sections: {
     table: 'sections',

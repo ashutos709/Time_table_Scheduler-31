@@ -23,7 +23,10 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
       .delete()
       .not('id', 'is', null);
     
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error(`Delete error for table ${table}:`, deleteError);
+      throw deleteError;
+    }
     
     // Then insert new data if we have any
     if (data && data.length > 0) {
@@ -32,7 +35,7 @@ export const saveToSupabase = async <T>(tableKey: keyof typeof tableMapping, dat
         mapping.transform ? mapping.transform(item) : item
       );
       
-      console.log(`Saving to ${table}:`, transformedData);
+      console.log(`Saving to ${table}:`, JSON.stringify(transformedData, null, 2));
       
       const { error: insertError } = await supabase
         .from(table)
@@ -61,7 +64,10 @@ export const loadFromSupabase = async <T>(tableKey: keyof typeof tableMapping): 
       .from(supabaseTable)
       .select('*');
     
-    if (error) throw error;
+    if (error) {
+      console.error(`Load error for table ${supabaseTable}:`, error);
+      throw error;
+    }
     
     // Transform data using the fromDb function if provided
     if (data && fromDb) {
